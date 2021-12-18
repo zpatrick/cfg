@@ -4,29 +4,79 @@ import (
 	"context"
 	"flag"
 	"strconv"
+	"time"
 )
 
-// A FlagLookupFunc is used to determine whether or not a given flag was set by a user.
-// It's expected a FlagLookupFunc will wrap either the flag.Lookup or flag.FlagSet.Lookup methods.
-// TODO: Examples:
-//  portFlag := flag.Int("port", 9090, "the port to listen on")
-//  cfg.IntFlag(portFlag, func() *flag.Flag { return flag.Lookup("port") }}
-//  ...
-//  fs := flag.NewFlagSet("", flag.ContinueOnError)
-//  portFlag := fs.Int("port", 9090, "the port to listen on")
-//  cfg.IntFlag(portFlag, func() *flag.Flag { return fs.Lookup("port") })
-type FlagLookupFunc func() *flag.Flag
+type flagDefaultChecker func() error
+
+func IgnoreFlagDefault(name string, visitFunc func(fn func(*flag.Flag))) flagDefaultChecker {
+	return func() error {
+		var flagIsSet bool
+		visitFunc(func(f *flag.Flag) {
+			if f.Name == name {
+				flagIsSet = true
+			}
+		})
+
+		if !flagIsSet {
+			return NoValueProvidedError
+		}
+
+		return nil
+	}
+}
 
 // IntFlag returns a provider from the given flag's pointer.
-// If a nil lookupFunc is passed in, the flag's default value will be provided if the flag is unset.
-// Otherwise, no value will be provided if the flag is unset.
-func IntFlag(ptr *int, lookupFunc FlagLookupFunc) Provider {
+func IntFlag(ptr *int, checker flagDefaultChecker) Provider {
 	return ProviderFunc(func(ctx context.Context) ([]byte, error) {
-		if lookupFunc != nil && lookupFunc() == nil {
-			return nil, NoValueProvidedError
+		if checker != nil {
+			if err := checker(); err != nil {
+				return nil, err
+			}
 		}
 
 		s := strconv.Itoa(*ptr)
 		return []byte(s), nil
 	})
 }
+
+// StringFlag returns a provider from the given flag's pointer.
+func StringFlag(ptr *string, checker flagDefaultChecker) Provider {
+	return ProviderFunc(func(ctx context.Context) ([]byte, error) {
+		if checker != nil {
+			if err := checker(); err != nil {
+				return nil, err
+			}
+		}
+
+		return []byte(*ptr), nil
+	})
+}
+
+// BoolFlag returns a provider from the given flag's pointer.
+func BoolFlag(ptr *bool, checker flagDefaultChecker) Provider {
+	return ProviderFunc(func(ctx context.Context) ([]byte, error) {
+		if checker != nil {
+			if err := checker(); err != nil {
+				return nil, err
+			}
+		}
+
+		s := strconv.FormatBool(*ptr)
+		return []byte(s), nil
+	})
+}
+
+func DurationFlag(ptr *time.Duration, checker flagDefaultChecker) Provider {
+	return ProviderFunc(func(ctx context.Context) ([]byte, error) {
+		if checker != nil {
+			if err := checker(); err != nil {
+				return nil, err
+			}
+		}
+
+		return []byte(ptr.String()), nil
+	})
+}
+
+// TODO: 64s, uints
