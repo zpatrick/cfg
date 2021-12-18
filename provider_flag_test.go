@@ -5,7 +5,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/zpatrick/cfg"
 )
 
@@ -86,3 +88,29 @@ func ExampleIntFlag_ignoreFlagDefault() {
 
 	// Output: no value was provided
 }
+
+func TestIntFlag(t *testing.T) {
+	fs := flag.NewFlagSet("", flag.PanicOnError)
+	f := fs.Int("test", 80, "")
+	provider := cfg.IntFlag(f, nil)
+
+	out, err := provider.Provide(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, string(out), "80")
+
+	assert.NoError(t, fs.Parse([]string{"--test", "100"}))
+	out, err = provider.Provide(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, string(out), "100")
+}
+
+func TestIntFlagIgnoreDefault(t *testing.T) {
+	fs := flag.NewFlagSet("", flag.PanicOnError)
+	f := fs.Int("test", 80, "")
+	provider := cfg.IntFlag(f, cfg.IgnoreFlagDefault("test", fs.Visit))
+
+	_, err := provider.Provide(context.Background())
+	assert.ErrorIs(t, err, cfg.NoValueProvidedError)
+}
+
+// TODO: test string, bool, dur, ...
