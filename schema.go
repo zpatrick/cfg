@@ -4,23 +4,10 @@ package cfg
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strconv"
 	"context"
 )
 
-var NoValueError = errors.New("no value set")
-
-type Provider interface {
-	Provide(ctx context.Context) ([]byte, error)
-}
-
-type ProviderFunc func(ctx context.Context) ([]byte, error)
-
-func (f ProviderFunc) Provide(ctx context.Context) ([]byte, error) {
-	return f(ctx)
-}
-
+// A Schema ...
 type Schema[T any] struct {
 	Name      string
 	Decode    func(b []byte) (T, error)
@@ -29,11 +16,14 @@ type Schema[T any] struct {
 	Providers []Provider
 }
 
+
+
+
 func (s Schema[T]) Load(ctx context.Context) (out T, err error) {
 	for _, p := range s.Providers {
 		b, err := p.Provide(ctx)
 		if err != nil {
-			if errors.Is(err, NoValueError) {
+			if errors.Is(err, NoValueProvidedError) {
 				continue
 			}
 
@@ -52,39 +42,12 @@ func (s Schema[T]) Load(ctx context.Context) (out T, err error) {
 		return s.Default(), nil
 	}
 
-	return out, NoValueError
-}
-
-func DecodeInt(b []byte) (int, error) {
-	return strconv.Atoi(string(b))
+	return out, NoValueProvidedError
 }
 
 
 
-func EnvVar(key string) Provider {
-	return ProviderFunc(func(ctx context.Context) ([]byte, error) {
-		if val := os.Getenv(key); val != "" {
-			return []byte(val), nil
-		}
 
-		return nil, NoValueError
-	})
-}
-
-func OneOf[T comparable](allowed ...T) func(in T) error {
-	s := make(map[T]struct{}, len(allowed))
-	for _, a := range allowed {
-		s[a] = struct{}{}
-	}
-
-	return func(in T) error {
-		if _, ok := s[in]; ok {
-			return nil
-		}
-
-		return fmt.Errorf("value %v is not in %v", in, allowed)
-	}
-}
 
 // TODO: use interface, anything with 'Load' method
 // func Validate(ss ...Schema) error {

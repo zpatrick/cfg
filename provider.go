@@ -1,6 +1,8 @@
 package cfg
 
-import "context"
+import (
+	"context"
+)
 
 // A Provider is used to load a "raw" configuration value from some predetermined source.
 // A Decoder will be used to convert the value from byte slice into the appropriate type.
