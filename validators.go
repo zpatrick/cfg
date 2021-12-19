@@ -34,3 +34,30 @@ func Contains[T comparable](vals ...T) func(input T) error {
 		return fmt.Errorf("input %v not contained in %v", input, vals)
 	}
 }
+
+func Or[T any](validators ...func(int T) error) func(in T) error {
+	return func(in T) error {
+		for _, v := range validators {
+			err := v(in)
+			if err == nil {
+				return err
+			}
+
+			// TODO: accumulate errors
+		}
+
+		return fmt.Errorf("invalid")
+	}
+}
+
+func And[T any](validators ...func(int T) error) func(in T) error {
+	return func(in T) error {
+		for _, v := range validators {
+			if err := v(in); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
