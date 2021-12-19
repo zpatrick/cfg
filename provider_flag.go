@@ -3,7 +3,6 @@ package cfg
 import (
 	"context"
 	"flag"
-	"strconv"
 	"time"
 )
 
@@ -35,8 +34,7 @@ func IntFlag(ptr *int, checker flagDefaultChecker) Provider {
 			}
 		}
 
-		s := strconv.Itoa(*ptr)
-		return []byte(s), nil
+		return EncodeInt(*ptr), nil
 	})
 }
 
@@ -49,7 +47,7 @@ func StringFlag(ptr *string, checker flagDefaultChecker) Provider {
 			}
 		}
 
-		return []byte(*ptr), nil
+		return EncodeString(*ptr), nil
 	})
 }
 
@@ -62,8 +60,7 @@ func BoolFlag(ptr *bool, checker flagDefaultChecker) Provider {
 			}
 		}
 
-		s := strconv.FormatBool(*ptr)
-		return []byte(s), nil
+		return EncodeBool(*ptr), nil
 	})
 }
 
@@ -75,7 +72,7 @@ func DurationFlag(ptr *time.Duration, checker flagDefaultChecker) Provider {
 			}
 		}
 
-		return []byte(ptr.String()), nil
+		return EncodeDuration(*ptr), nil
 	})
 }
 

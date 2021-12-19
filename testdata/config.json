@@ -1,0 +1,13 @@
+{
+    "server": {
+        "port": 8000,
+        "request_timeout": "30s",
+        "enable_ssl": false
+    },
+    "database": {
+        "host": "locahost",
+        "port": 3306,
+        "username": "root",
+        "password": "secret"
+    }
+}
