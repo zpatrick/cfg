@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"gopkg.in/yaml.v2"
 )
 
 type FileFormat string
@@ -47,6 +49,7 @@ func File(format FileFormat, path string) (*fileProvider, error) {
 	switch format {
 	case FormatINI:
 	case FormatYAML:
+		parseFunc = parseYAML
 	case FormatJSON:
 		parseFunc = parseJSON
 	default:
@@ -85,6 +88,20 @@ func parseJSON(data []byte) (*node, error) {
 	return root, nil
 }
 
+func parseYAML(data []byte) (*node, error) {
+	unmarshaled := map[string]interface{}{}
+	if err := yaml.Unmarshal(data, &unmarshaled); err != nil {
+		return nil, err
+	}
+
+	root := &node{
+		name:     "root",
+		children: createChildNodes(unmarshaled),
+	}
+
+	return root, nil
+}
+
 func createChildNodes(values map[string]interface{}) map[string]*node {
 	nodes := make(map[string]*node, len(values))
 	for k, v := range values {
@@ -93,6 +110,7 @@ func createChildNodes(values map[string]interface{}) map[string]*node {
 		switch v := v.(type) {
 		case map[string]interface{}:
 			child.children = createChildNodes(v)
+		case map[interface{}]interface{}:
 		default:
 			child.value = v
 		}
