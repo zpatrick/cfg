@@ -89,8 +89,7 @@ func DecodeBool(b []byte) (bool, error) {
 
 // EncodeBool is an encoder for the bool type.
 func EncodeBool(v bool) []byte {
-	s := strconv.FormatBool(v)
-	return []byte(s)
+	return []byte(strconv.FormatBool(v))
 }
 
 // DecodeString is a decoder for the string type.

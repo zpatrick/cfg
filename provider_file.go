@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"gopkg.in/yaml.v2"
+	//"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 type FileFormat string
@@ -89,17 +90,23 @@ func parseJSON(data []byte) (*node, error) {
 }
 
 func parseYAML(data []byte) (*node, error) {
-	unmarshaled := map[string]interface{}{}
-	if err := yaml.Unmarshal(data, &unmarshaled); err != nil {
+	asJSON, err := yaml.YAMLToJSON(data)
+	if err != nil {
 		return nil, err
 	}
 
-	root := &node{
-		name:     "root",
-		children: createChildNodes(unmarshaled),
-	}
+	return parseJSON(asJSON)
+	// unmarshaled := map[string]interface{}{}
+	// if err := yaml.Unmarshal(data, &unmarshaled); err != nil {
+	// 	return nil, err
+	// }
 
-	return root, nil
+	// root := &node{
+	// 	name:     "root",
+	// 	children: createChildNodes(unmarshaled),
+	// }
+
+	// return root, nil
 }
 
 func createChildNodes(values map[string]interface{}) map[string]*node {
@@ -110,7 +117,6 @@ func createChildNodes(values map[string]interface{}) map[string]*node {
 		switch v := v.(type) {
 		case map[string]interface{}:
 			child.children = createChildNodes(v)
-		case map[interface{}]interface{}:
 		default:
 			child.value = v
 		}

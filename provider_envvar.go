@@ -13,6 +13,6 @@ func EnvVar(key string) Provider {
 			return nil, NoValueProvidedError
 		}
 
-		return []byte(val), nil
+		return EncodeString(val), nil
 	})
 }
