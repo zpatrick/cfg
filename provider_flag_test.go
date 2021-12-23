@@ -95,12 +95,18 @@ func TestIntFlag(t *testing.T) {
 	provider := cfg.IntFlag(f, nil)
 
 	out, err := provider.Provide(context.Background())
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	assert.Equal(t, string(out), "80")
 
 	assert.NoError(t, fs.Parse([]string{"--test", "100"}))
 	out, err = provider.Provide(context.Background())
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	assert.Equal(t, string(out), "100")
 }
 

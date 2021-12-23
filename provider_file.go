@@ -3,6 +3,7 @@ package cfg
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -49,6 +50,7 @@ func File(format FileFormat, path string) (*fileProvider, error) {
 	var parseFunc func(data []byte) (*node, error)
 	switch format {
 	case FormatINI:
+		parseFunc = parseINI
 	case FormatYAML:
 		parseFunc = parseYAML
 	case FormatJSON:
@@ -75,6 +77,10 @@ func (n *node) IsLeaf() bool {
 	return len(n.children) == 0
 }
 
+func parseINI(data []byte) (*node, error) {
+	return nil, errors.New("not implemented")
+}
+
 func parseJSON(data []byte) (*node, error) {
 	unmarshaled := map[string]interface{}{}
 	if err := json.Unmarshal(data, &unmarshaled); err != nil {
@@ -96,17 +102,6 @@ func parseYAML(data []byte) (*node, error) {
 	}
 
 	return parseJSON(asJSON)
-	// unmarshaled := map[string]interface{}{}
-	// if err := yaml.Unmarshal(data, &unmarshaled); err != nil {
-	// 	return nil, err
-	// }
-
-	// root := &node{
-	// 	name:     "root",
-	// 	children: createChildNodes(unmarshaled),
-	// }
-
-	// return root, nil
 }
 
 func createChildNodes(values map[string]interface{}) map[string]*node {

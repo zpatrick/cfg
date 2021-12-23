@@ -14,4 +14,5 @@ type Config struct {
 
 func Load(ctx context.Context) (Config, error) {
 	// envvar and file
+	return Config{}, nil
 }

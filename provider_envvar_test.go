@@ -13,7 +13,10 @@ func TestEnvVar(t *testing.T) {
 	os.Setenv(key, "value")
 
 	out, err := EnvVar(key).Provide(context.Background())
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	assert.Equal(t, string(out), "value")
 }
 
