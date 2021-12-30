@@ -3,61 +3,77 @@ package cfg
 import (
 	"constraints"
 	"fmt"
+
+	"go.uber.org/multierr"
 )
 
+// A Validator checks whether or not a given value is considered valid.
+type Validator[T any] interface {
+	// Validate returns an error if the value of in is considered invalid.
+	Validate(in T) error
+}
+
+// A ValidatorFunc is an adapter type which allows functions to be used as Validators.
+type ValidatorFunc[T any] func(T) error
+
+// Validate calls f(in).
+func (f ValidatorFunc[T]) Validate(in T) error {
+	return f(in)
+}
+
 // Between returns a validator which ensures the input is > min and < max.
-func Between[T constraints.Ordered](min, max T) func(input T) error {
-	return func(input T) error {
+func Between[T constraints.Ordered](min, max T) Validator[T] {
+	return ValidatorFunc[T](func(in T) error {
 		switch {
-		case input <= min:
-			return fmt.Errorf("input %v is <= than the allowed minimum %v", input, min)
-		case input >= max:
-			return fmt.Errorf("input %v is >= than the allowed maximum %v", input, max)
+		case in <= min:
+			return fmt.Errorf("input %v is <= than the allowed minimum %v", in, min)
+		case in >= max:
+			return fmt.Errorf("input %v is >= than the allowed maximum %v", in, max)
 		default:
 			return nil
 		}
-	}
+	})
 }
 
 // Contains returns a validator which ensures the input is equal to one of the given vals.
-func Contains[T comparable](vals ...T) func(input T) error {
+func Contains[T comparable](vals ...T) Validator[T] {
 	set := make(map[T]struct{}, len(vals))
 	for _, v := range vals {
 		set[v] = struct{}{}
 	}
 
-	return func(input T) error {
-		if _, ok := set[input]; ok {
+	return ValidatorFunc[T](func(in T) error {
+		if _, ok := set[in]; ok {
 			return nil
 		}
 
-		return fmt.Errorf("input %v not contained in %v", input, vals)
-	}
+		return fmt.Errorf("input %v not contained in %v", in, vals)
+	})
 }
 
-func Or[T any](validators ...func(int T) error) func(in T) error {
-	return func(in T) error {
+func Or[T any](validators ...Validator[T]) Validator[T] {
+	var errs []error
+	return ValidatorFunc[T](func(in T) error {
 		for _, v := range validators {
-			err := v(in)
-			if err == nil {
-				return err
+			if err := v.Validate(in); err != nil {
+				errs = append(errs, err)
 			}
 
-			// TODO: accumulate errors
+			return nil
 		}
 
-		return fmt.Errorf("invalid")
-	}
+		return multierr.Combine(errs...)
+	})
 }
 
-func And[T any](validators ...func(int T) error) func(in T) error {
-	return func(in T) error {
+func And[T any](validators ...Validator[T]) Validator[T] {
+	return ValidatorFunc[T](func(in T) error {
 		for _, v := range validators {
-			if err := v(in); err != nil {
+			if err := v.Validate(in); err != nil {
 				return err
 			}
 		}
 
 		return nil
-	}
+	})
 }

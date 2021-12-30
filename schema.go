@@ -1,10 +1,9 @@
-
 package cfg
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"context"
 )
 
 // A Schema ...
@@ -12,12 +11,9 @@ type Schema[T any] struct {
 	Name      string
 	Decode    func(b []byte) (T, error)
 	Default   func() T
-	Validate  func(T) error
+	Validator Validator[T]
 	Providers []Provider
 }
-
-
-
 
 func (s Schema[T]) Load(ctx context.Context) (out T, err error) {
 	for _, p := range s.Providers {
@@ -35,6 +31,12 @@ func (s Schema[T]) Load(ctx context.Context) (out T, err error) {
 			return out, fmt.Errorf("failed to decode %s: %s", s.Name, err)
 		}
 
+		if s.Validator != nil {
+			if err := s.Validator.Validate(out); err != nil {
+				return out, err
+			}
+		}
+
 		return out, nil
 	}
 
@@ -44,10 +46,6 @@ func (s Schema[T]) Load(ctx context.Context) (out T, err error) {
 
 	return out, NoValueProvidedError
 }
-
-
-
-
 
 // TODO: use interface, anything with 'Load' method
 // func Validate(ss ...Schema) error {
