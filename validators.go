@@ -35,8 +35,8 @@ func Between[T constraints.Ordered](min, max T) Validator[T] {
 	})
 }
 
-// Contains returns a validator which ensures the input is equal to one of the given vals.
-func Contains[T comparable](vals ...T) Validator[T] {
+// OneOf returns a validator which ensures the input is equal to one of the given vals.
+func OneOf[T comparable](vals ...T) Validator[T] {
 	set := make(map[T]struct{}, len(vals))
 	for _, v := range vals {
 		set[v] = struct{}{}
