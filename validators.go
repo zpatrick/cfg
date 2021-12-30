@@ -51,6 +51,8 @@ func Contains[T comparable](vals ...T) Validator[T] {
 	})
 }
 
+// And combines the given validators into a single validator,
+// requiring only one validator check to succeed.
 func Or[T any](validators ...Validator[T]) Validator[T] {
 	var errs []error
 	return ValidatorFunc[T](func(in T) error {
@@ -66,6 +68,8 @@ func Or[T any](validators ...Validator[T]) Validator[T] {
 	})
 }
 
+// And combines the given validators into a single validator,
+// requiring each validator check to succeed.
 func And[T any](validators ...Validator[T]) Validator[T] {
 	return ValidatorFunc[T](func(in T) error {
 		for _, v := range validators {
