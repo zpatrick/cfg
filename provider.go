@@ -4,16 +4,17 @@ import (
 	"context"
 )
 
-// A Provider is used to load a "raw" configuration value from some predetermined source.
-// A Decoder will be used to convert the value from byte slice into the appropriate type.
-type Provider interface {
-	Provide(ctx context.Context) ([]byte, error)
+// A Provider loads a configuration value from some predetermined source.
+// If no value is provided by the underlying source, the Provider must return
+// a NoValueProvidedError.
+type Provider[T any] interface {
+	Provide(ctx context.Context) (T, error)
 }
 
 // The ProviderFunc is an adapter type which allows ordinary functions to be used as Providers.
-type ProviderFunc func(ctx context.Context) ([]byte, error)
+type ProviderFunc[T any] func(ctx context.Context) (T, error)
 
 // Provide calls f(ctx).
-func (f ProviderFunc) Provide(ctx context.Context) ([]byte, error) {
+func (f ProviderFunc[T]) Provide(ctx context.Context) (T, error) {
 	return f(ctx)
 }

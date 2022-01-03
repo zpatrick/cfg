@@ -93,8 +93,8 @@ func EncodeBool(v bool) []byte {
 }
 
 // DecodeString is a decoder for the string type.
-func DecodeString(b []byte) string {
-	return string(b)
+func DecodeString(b []byte) (string, error) {
+	return string(b), nil
 }
 
 // EncodeString is an encoder for the string type.

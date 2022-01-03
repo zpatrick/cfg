@@ -2,10 +2,21 @@ package cfg
 
 import (
 	"constraints"
+	"context"
 	"fmt"
 
 	"go.uber.org/multierr"
 )
+
+func Validate(ctx context.Context, validators ...interface{ Validate(context.Context) error }) error {
+	for _, v := range validators {
+		if err := v.Validate(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // A Validator checks whether or not a given value is considered valid.
 type Validator[T any] interface {
@@ -51,7 +62,7 @@ func OneOf[T comparable](vals ...T) Validator[T] {
 	})
 }
 
-// And combines the given validators into a single validator,
+// Or combines the given validators into a single validator,
 // requiring only one validator check to succeed.
 func Or[T any](validators ...Validator[T]) Validator[T] {
 	var errs []error

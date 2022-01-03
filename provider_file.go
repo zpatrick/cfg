@@ -1,122 +1,112 @@
 package cfg
 
-import (
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"os"
+// type FileFormat string
 
-	"sigs.k8s.io/yaml"
-)
+// const (
+// 	FormatINI  FileFormat = "ini"
+// 	FormatYAML FileFormat = "yaml"
+// 	FormatJSON FileFormat = "json"
+// )
 
-type FileFormat string
+// type fileProvider struct {
+// 	root *node
+// }
 
-const (
-	FormatINI  FileFormat = "ini"
-	FormatYAML FileFormat = "yaml"
-	FormatJSON FileFormat = "json"
-)
+// func (f *fileProvider) Provide(section string, keys ...string) Provider {
+// 	return ProviderFunc(func(ctx context.Context) ([]byte, error) {
+// 		n, ok := f.root.children[section]
+// 		if !ok {
+// 			return nil, NoValueProvidedError
+// 		}
 
-type fileProvider struct {
-	root *node
-}
+// 		for _, key := range keys {
+// 			n, ok = n.children[key]
+// 			if !ok {
+// 				return nil, NoValueProvidedError
+// 			}
+// 		}
 
-func (f *fileProvider) Provide(section string, keys ...string) Provider {
-	return ProviderFunc(func(ctx context.Context) ([]byte, error) {
-		n, ok := f.root.children[section]
-		if !ok {
-			return nil, NoValueProvidedError
-		}
+// 		return Encode(n.value), nil
+// 	})
+// }
 
-		for _, key := range keys {
-			n, ok = n.children[key]
-			if !ok {
-				return nil, NoValueProvidedError
-			}
-		}
+// func File(format FileFormat, path string) (*fileProvider, error) {
+// 	data, err := os.ReadFile(path)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-		return Encode(n.value), nil
-	})
-}
+// 	var parseFunc func(data []byte) (*node, error)
+// 	switch format {
+// 	case FormatINI:
+// 		parseFunc = parseINI
+// 	case FormatYAML:
+// 		parseFunc = parseYAML
+// 	case FormatJSON:
+// 		parseFunc = parseJSON
+// 	default:
+// 		return nil, fmt.Errorf("unrecognized file format: %v", format)
+// 	}
 
-func File(format FileFormat, path string) (*fileProvider, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
+// 	root, err := parseFunc(data)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	var parseFunc func(data []byte) (*node, error)
-	switch format {
-	case FormatINI:
-		parseFunc = parseINI
-	case FormatYAML:
-		parseFunc = parseYAML
-	case FormatJSON:
-		parseFunc = parseJSON
-	default:
-		return nil, fmt.Errorf("unrecognized file format: %v", format)
-	}
+// 	return &fileProvider{root: root}, nil
+// }
 
-	root, err := parseFunc(data)
-	if err != nil {
-		return nil, err
-	}
+// type node struct {
+// 	name     string
+// 	value    interface{}
+// 	children map[string]*node
+// }
 
-	return &fileProvider{root: root}, nil
-}
+// func (n *node) IsLeaf() bool {
+// 	return len(n.children) == 0
+// }
 
-type node struct {
-	name     string
-	value    interface{}
-	children map[string]*node
-}
+// func parseINI(data []byte) (*node, error) {
+// 	return nil, errors.New("not implemented")
+// }
 
-func (n *node) IsLeaf() bool {
-	return len(n.children) == 0
-}
+// func parseJSON(data []byte) (*node, error) {
+// 	unmarshaled := map[string]interface{}{}
+// 	if err := json.Unmarshal(data, &unmarshaled); err != nil {
+// 		return nil, err
+// 	}
 
-func parseINI(data []byte) (*node, error) {
-	return nil, errors.New("not implemented")
-}
+// 	root := &node{
+// 		name:     "root",
+// 		children: createChildNodes(unmarshaled),
+// 	}
 
-func parseJSON(data []byte) (*node, error) {
-	unmarshaled := map[string]interface{}{}
-	if err := json.Unmarshal(data, &unmarshaled); err != nil {
-		return nil, err
-	}
+// 	return root, nil
+// }
 
-	root := &node{
-		name:     "root",
-		children: createChildNodes(unmarshaled),
-	}
+// func parseYAML(data []byte) (*node, error) {
+// 	asJSON, err := yaml.YAMLToJSON(data)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return root, nil
-}
+// 	return parseJSON(asJSON)
+// }
 
-func parseYAML(data []byte) (*node, error) {
-	asJSON, err := yaml.YAMLToJSON(data)
-	if err != nil {
-		return nil, err
-	}
+// func createChildNodes(values map[string]interface{}) map[string]*node {
+// 	nodes := make(map[string]*node, len(values))
+// 	for k, v := range values {
+// 		child := &node{name: k}
 
-	return parseJSON(asJSON)
-}
+// 		switch v := v.(type) {
+// 		case map[string]interface{}:
+// 			child.children = createChildNodes(v)
+// 		default:
+// 			child.value = v
+// 		}
 
-func createChildNodes(values map[string]interface{}) map[string]*node {
-	nodes := make(map[string]*node, len(values))
-	for k, v := range values {
-		child := &node{name: k}
+// 		nodes[k] = child
+// 	}
 
-		switch v := v.(type) {
-		case map[string]interface{}:
-			child.children = createChildNodes(v)
-		default:
-			child.value = v
-		}
-
-		nodes[k] = child
-	}
-
-	return nodes
-}
+// 	return nodes
+// }
