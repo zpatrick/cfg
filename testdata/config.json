@@ -2,7 +2,7 @@
     "server": {
         "port": 8000,
         "request_timeout": "30s",
-        "enable_ssl": false
+        "enable_ssl": true
     },
     "database": {
         "host": "localhost",

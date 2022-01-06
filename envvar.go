@@ -5,6 +5,10 @@ import (
 	"os"
 )
 
+func EnvVarStr(key string) Provider[string] {
+	return &envVarProvider[string]{key: key, decode: func(s string) (string, error) { return s, nil }}
+}
+
 // EnvVar returns a provider for the given environment variable.
 // The decode function is used to convert the raw environment variable into type T.
 func EnvVar[T any](key string, decode func(string) (T, error)) Provider[T] {

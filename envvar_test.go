@@ -1,32 +1,35 @@
-package cfg
+package cfg_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/testx/assert"
 )
 
-func TestEnvVar(t *testing.T) {
-	const key = "CFG_TEST_KEY"
-	os.Setenv(key, "5")
+func ExampleEnvVar() {
+	const key = "APP_PORT"
+	os.Setenv(key, "9090")
 
-	provider := EnvVar(key, strconv.Atoi)
-	out, err := provider.Provide(context.Background())
+	provider := cfg.EnvVar(key, strconv.Atoi)
+	val, err := provider.Provide(context.Background())
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 
-	assert.Equal(t, out, 5)
+	fmt.Println("port is:", val)
+	// Output: port is: 9090
 }
 
 func TestEnvVarNoValue(t *testing.T) {
-	const key = "CFG_TEST_KEY"
+	const key = "APP_PORT"
 	os.Unsetenv(key)
 
-	provider := EnvVar(key, strconv.Atoi)
+	provider := cfg.EnvVar(key, strconv.Atoi)
 	_, err := provider.Provide(context.Background())
-	assert.ErrorIs(t, err, NoValueProvidedError)
+	assert.ErrorIs(t, err, cfg.NoValueProvidedError)
 }
