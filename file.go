@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/go-ini/ini"
 	"sigs.k8s.io/yaml"
 )
 
 // A Node ...
 type Node struct {
 	Name     string
-	Value    interface{}
+	Value    any
 	Children map[string]*Node
 }
 
@@ -44,23 +45,6 @@ func ParseJSON() FileContentParser {
 	})
 }
 
-func ParseYAML() FileContentParser {
-	return FileContentParserFunc(func(content []byte) (*Node, error) {
-		asJSON, err := yaml.YAMLToJSON(content)
-		if err != nil {
-			return nil, err
-		}
-
-		return ParseJSON().Parse(asJSON)
-	})
-}
-
-func ParseINI() FileContentParser {
-	return FileContentParserFunc(func(content []byte) (*Node, error) {
-		return nil, nil
-	})
-}
-
 func createChildNodes(values map[string]interface{}) map[string]*Node {
 	nodes := make(map[string]*Node, len(values))
 	for k, v := range values {
@@ -77,8 +61,70 @@ func createChildNodes(values map[string]interface{}) map[string]*Node {
 	return nodes
 }
 
+func ParseYAML() FileContentParser {
+	return FileContentParserFunc(func(content []byte) (*Node, error) {
+		asJSON, err := yaml.YAMLToJSON(content)
+		if err != nil {
+			return nil, err
+		}
+
+		return ParseJSON().Parse(asJSON)
+	})
+}
+
+// Note that the underlying parser will parse all types as strings.
+func ParseINI() FileContentParser {
+	return FileContentParserFunc(func(content []byte) (*Node, error) {
+		f, err := ini.Load(content)
+		if err != nil {
+			return nil, err
+		}
+
+		sectionNodes := map[string]*Node{}
+		for _, s := range f.Sections() {
+			childNodes := map[string]*Node{}
+			for _, k := range s.Keys() {
+				childNode := &Node{
+					Name:  k.Name(),
+					Value: k.Value(),
+				}
+
+				childNodes[k.Name()] = childNode
+			}
+
+			sectionNode := &Node{
+				Name:     s.Name(),
+				Children: childNodes,
+			}
+
+			sectionNodes[s.Name()] = sectionNode
+		}
+
+		root := &Node{
+			Name:     "root",
+			Children: sectionNodes,
+		}
+
+		return root, nil
+	})
+}
+
 type FileProvider struct {
 	root *Node
+}
+
+func File(parser FileContentParser, path string) (*FileProvider, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	root, err := parser.Parse(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileProvider{root: root}, nil
 }
 
 func (f *FileProvider) Int(section string, keys ...string) Provider[int] {
@@ -103,7 +149,8 @@ func (f *FileProvider) Bool(section string, keys ...string) Provider[bool] {
 
 // TOOD: uints,  float, etc.
 
-// TODO: can't use generics on methods, so using this instead
+// FileProvide
+// Generics are not supported on methods (yet), hence why this is a package function instead of a method.
 func FileProvide[T any](f *FileProvider, section string, keys ...string) Provider[T] {
 	return ProviderFunc[T](func(ctx context.Context) (out T, err error) {
 		n, ok := f.root.Children[section]
@@ -125,24 +172,4 @@ func FileProvide[T any](f *FileProvider, section string, keys ...string) Provide
 
 		return out, nil
 	})
-}
-
-// TODO: things like the underlying parser using a float64 for the port instead of an int
-// are causing an issue. It seems like the parser should be made more configurable.
-// Perhaps even at the ParseJSON level.
-
-// Cechkout the custom decoder: https://pkg.go.dev/encoding/json#Decoder.UseNumber
-// Perhaps we can use that?
-func File(parser FileContentParser, path string) (*FileProvider, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	root, err := parser.Parse(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &FileProvider{root: root}, nil
 }

@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/go-ini/ini v1.66.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
