@@ -19,6 +19,15 @@ func (c Config) Validate(ctx context.Context) error {
 }
 
 func Load(ctx context.Context) (*Config, error) {
+	// TODO: A Better API would be
+	// f := cfg.Yaml(path)
+	//
+	// Providers: []cfg.Provider[int]{
+	// 		f.Int("server", "port"),
+	//
+	//
+	// Under the hood would work in a similar way as the FileProvider[T] calls
+	// where we just wrap the generic function and pass in the proper decoder function
 	f, err := cfg.File(cfg.ParseYAML(), "config.yaml")
 	if err != nil {
 		return nil, err

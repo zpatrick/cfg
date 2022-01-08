@@ -65,8 +65,8 @@ func OneOf[T comparable](vals ...T) Validator[T] {
 // Or combines the given validators into a single validator,
 // requiring only one validator check to succeed.
 func Or[T any](validators ...Validator[T]) Validator[T] {
-	var errs []error
 	return ValidatorFunc[T](func(in T) error {
+		var errs []error
 		for _, v := range validators {
 			if err := v.Validate(in); err != nil {
 				errs = append(errs, err)
