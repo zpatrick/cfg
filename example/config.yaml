@@ -1,0 +1,10 @@
+server:
+  port: 8000
+  timeout: 30s
+  enable_ssl: true
+
+database:
+  host: localhost
+  port: 3306
+  username: app_ro
+  password: secret

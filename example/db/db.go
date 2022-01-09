@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/zpatrick/cfg"
+	"go.uber.org/multierr"
 )
 
 type Config struct {
@@ -17,7 +18,12 @@ type Config struct {
 }
 
 func (c Config) Validate(ctx context.Context) error {
-	return cfg.Validate(ctx, c.Host, c.Port, c.Username, c.Password)
+	return multierr.Combine(
+		cfg.Validate(ctx, "host", c.Host),
+		cfg.Validate(ctx, "port", c.Port),
+		cfg.Validate(ctx, "username", c.Username),
+		cfg.Validate(ctx, "password", c.Password),
+	)
 }
 
 type DB struct {

@@ -5,14 +5,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 )
 
-func Validate(ctx context.Context, validators ...interface{ Validate(context.Context) error }) error {
-	for _, v := range validators {
-		if err := v.Validate(ctx); err != nil {
-			return err
-		}
+type validatable interface{ Validate(context.Context) error }
+
+func Validate(ctx context.Context, name string, v validatable) error {
+	if err := v.Validate(ctx); err != nil {
+		return errors.Wrapf(err, "failed to validate %s", name)
 	}
 
 	return nil

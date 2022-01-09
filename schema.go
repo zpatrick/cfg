@@ -2,8 +2,8 @@ package cfg
 
 import (
 	"context"
-	"errors"
-	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 // A Schema ...
@@ -22,12 +22,12 @@ func (s Schema[T]) Load(ctx context.Context) (val T, err error) {
 				continue
 			}
 
-			return val, fmt.Errorf("failed to load %s: %w", s.Name, err)
+			return val, errors.Wrapf(err, "failed to load %s", s.Name)
 		}
 
 		if s.Validator != nil {
 			if err := s.Validator.Validate(val); err != nil {
-				return val, err
+				return val, errors.Wrapf(err, "failed to validate %s", s.Name)
 			}
 		}
 
@@ -38,7 +38,7 @@ func (s Schema[T]) Load(ctx context.Context) (val T, err error) {
 		return s.Default(), nil
 	}
 
-	return val, NoValueProvidedError
+	return val, errors.Wrap(NoValueProvidedError, s.Name)
 }
 
 func (s Schema[T]) MustLoad(ctx context.Context) T {

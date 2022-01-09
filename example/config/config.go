@@ -1,12 +1,14 @@
-package cfg
+package config
 
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/cfg/example/db"
 	"github.com/zpatrick/cfg/example/svr"
+	"go.uber.org/multierr"
 )
 
 type Config struct {
@@ -15,24 +17,21 @@ type Config struct {
 }
 
 func (c Config) Validate(ctx context.Context) error {
-	return cfg.Validate(ctx, c.Server, c.DB)
+	return multierr.Combine(
+		cfg.Validate(ctx, "server", c.Server),
+		cfg.Validate(ctx, "db", c.DB),
+	)
 }
 
 func Load(ctx context.Context) (*Config, error) {
-	// TODO: A Better API would be
-	// f := cfg.Yaml(path)
-	//
-	// Providers: []cfg.Provider[int]{
-	// 		f.Int("server", "port"),
-	//
-	//
-	// Under the hood would work in a similar way as the FileProvider[T] calls
-	// where we just wrap the generic function and pass in the proper decoder function
-	f, err := cfg.File(cfg.ParseYAML(), "config.yaml")
+	f, err := cfg.YAMLFile("config.yaml")
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO: When a schema is defined in a struct but not instantiated (e.g. we forget to define server.Timeout here),
+	// The validation step fails witha a NoValueProvided error but doesn't have the name so it's hard to tell which
+	// config provider it's talking about.
 	c := &Config{
 		Server: &svr.Config{
 			Port: cfg.Schema[int]{
@@ -41,7 +40,7 @@ func Load(ctx context.Context) (*Config, error) {
 				Validator: cfg.Between(5000, 9000),
 				Providers: []cfg.Provider[int]{
 					cfg.EnvVar("APP_SERVER_PORT", strconv.Atoi),
-					cfg.Convert(cfg.Float64ToInt, f.Float64("server", "port")),
+					f.Int("server", "port"),
 				},
 			},
 			EnableSSL: cfg.Schema[bool]{
@@ -51,6 +50,13 @@ func Load(ctx context.Context) (*Config, error) {
 					f.Bool("server", "enable_ssl"),
 				},
 			},
+			Timeout: cfg.Schema[time.Duration]{
+				Name: "server timeout",
+				Providers: []cfg.Provider[time.Duration]{
+					cfg.EnvVar("APP_SERVER_TIMEOUT", time.ParseDuration),
+					f.Duration("server", "timeout"),
+				},
+			},
 		},
 		DB: &db.Config{
 			Host: cfg.Schema[string]{
@@ -58,7 +64,7 @@ func Load(ctx context.Context) (*Config, error) {
 				Default: func() string { return "localhost" },
 				Providers: []cfg.Provider[string]{
 					cfg.EnvVarStr("APP_DB_HOST"),
-					f.String("db", "host"),
+					f.String("database", "host"),
 				},
 			},
 			Port: cfg.Schema[int]{
@@ -66,7 +72,7 @@ func Load(ctx context.Context) (*Config, error) {
 				Default: func() int { return 3306 },
 				Providers: []cfg.Provider[int]{
 					cfg.EnvVar("APP_DB_PORT", strconv.Atoi),
-					cfg.Convert(cfg.Float64ToInt, f.Float64("db", "port")),
+					f.Int("database", "port"),
 				},
 			},
 			Username: cfg.Schema[string]{
@@ -74,14 +80,14 @@ func Load(ctx context.Context) (*Config, error) {
 				Validator: cfg.OneOf("admin", "app_rw", "app_ro"),
 				Providers: []cfg.Provider[string]{
 					cfg.EnvVarStr("APP_DB_USERNAME"),
-					f.String("db", "username"),
+					f.String("database", "username"),
 				},
 			},
 			Password: cfg.Schema[string]{
 				Name: "db password",
 				Providers: []cfg.Provider[string]{
 					cfg.EnvVarStr("APP_DB_PASSWORD"),
-					f.String("db", "password"),
+					f.String("database", "password"),
 				},
 			},
 		},

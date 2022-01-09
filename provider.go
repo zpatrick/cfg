@@ -18,3 +18,9 @@ type ProviderFunc[T any] func(ctx context.Context) (T, error)
 func (f ProviderFunc[T]) Provide(ctx context.Context) (T, error) {
 	return f(ctx)
 }
+
+// A Providable adapts T as a Provider[T].
+type Providable[T any] struct{ V T }
+
+// Provide returns p.V.
+func (p Providable[T]) Provide(context.Context) (T, error) { return p.V, nil }
