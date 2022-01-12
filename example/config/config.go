@@ -67,7 +67,7 @@ type DBConfig struct {
 }
 
 func Load(ctx context.Context) (Config, error) {
-	f, err := cfg.YAMLFile("config.yaml")
+	yamlFile, err := cfg.YAMLFile("config.yaml")
 	if err != nil {
 		return Config{}, err
 	}
@@ -80,14 +80,14 @@ func Load(ctx context.Context) (Config, error) {
 				Validator: cfg.Between(5000, 9000),
 				Providers: []cfg.Provider[int]{
 					cfg.EnvVar("APP_SERVER_PORT", strconv.Atoi),
-					f.Int("server", "port"),
+					yamlFile.Int("server", "port"),
 				},
 			},
 			Timeout: cfg.Schema[time.Duration]{
 				Name: "server timeout",
 				Providers: []cfg.Provider[time.Duration]{
 					cfg.EnvVar("APP_SERVER_TIMEOUT", time.ParseDuration),
-					f.Duration("server", "timeout"),
+					yamlFile.Duration("server", "timeout"),
 				},
 			},
 		},
@@ -97,7 +97,7 @@ func Load(ctx context.Context) (Config, error) {
 				Default: func() string { return "localhost" },
 				Providers: []cfg.Provider[string]{
 					cfg.EnvVarStr("APP_DB_HOST"),
-					f.String("database", "host"),
+					yamlFile.String("database", "host"),
 				},
 			},
 			Port: cfg.Schema[int]{
@@ -105,7 +105,7 @@ func Load(ctx context.Context) (Config, error) {
 				Default: func() int { return 3306 },
 				Providers: []cfg.Provider[int]{
 					cfg.EnvVar("APP_DB_PORT", strconv.Atoi),
-					f.Int("database", "port"),
+					yamlFile.Int("database", "port"),
 				},
 			},
 			Username: cfg.Schema[string]{
@@ -113,14 +113,14 @@ func Load(ctx context.Context) (Config, error) {
 				Validator: cfg.OneOf("admin", "app_rw", "app_ro"),
 				Providers: []cfg.Provider[string]{
 					cfg.EnvVarStr("APP_DB_USERNAME"),
-					f.String("database", "username"),
+					yamlFile.String("database", "username"),
 				},
 			},
 			Password: cfg.Schema[string]{
 				Name: "db password",
 				Providers: []cfg.Provider[string]{
 					cfg.EnvVarStr("APP_DB_PASSWORD"),
-					f.String("database", "password"),
+					yamlFile.String("database", "password"),
 				},
 			},
 		},
