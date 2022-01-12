@@ -6,34 +6,74 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/example/db"
-	"github.com/zpatrick/cfg/example/svr"
 	"go.uber.org/multierr"
 )
 
-type Config struct {
-	Server *svr.Config
-	DB     *db.Config
+type Schema struct {
+	Server *ServerSchema
+	DB     *DBSchema
 }
 
-func (c Config) Validate(ctx context.Context) error {
+func (c *Schema) Validate(ctx context.Context) error {
 	return multierr.Combine(
 		cfg.Validate(ctx, "server", c.Server),
 		cfg.Validate(ctx, "db", c.DB),
 	)
 }
 
-func Load(ctx context.Context) (*Config, error) {
+type ServerSchema struct {
+	Port    cfg.Schema[int]
+	Timeout cfg.Schema[time.Duration]
+}
+
+func (s ServerSchema) Validate(ctx context.Context) error {
+	return multierr.Combine(
+		cfg.Validate(ctx, "port", s.Port),
+		cfg.Validate(ctx, "timeout", s.Timeout),
+	)
+}
+
+type DBSchema struct {
+	Host     cfg.Schema[string]
+	Port     cfg.Schema[int]
+	Username cfg.Schema[string]
+	Password cfg.Schema[string]
+}
+
+func (d DBSchema) Validate(ctx context.Context) error {
+	return multierr.Combine(
+		cfg.Validate(ctx, "host", d.Host),
+		cfg.Validate(ctx, "port", d.Port),
+		cfg.Validate(ctx, "username", d.Username),
+		cfg.Validate(ctx, "password", d.Password),
+	)
+}
+
+type Config struct {
+	Server ServerConfig
+	DB     DBConfig
+}
+
+type ServerConfig struct {
+	Port    int
+	Timeout time.Duration
+}
+
+type DBConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+}
+
+func Load(ctx context.Context) (Config, error) {
 	f, err := cfg.YAMLFile("config.yaml")
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 
-	// TODO: When a schema is defined in a struct but not instantiated (e.g. we forget to define server.Timeout here),
-	// The validation step fails witha a NoValueProvided error but doesn't have the name so it's hard to tell which
-	// config provider it's talking about.
-	c := &Config{
-		Server: &svr.Config{
+	schema := &Schema{
+		Server: &ServerSchema{
 			Port: cfg.Schema[int]{
 				Name:      "server port",
 				Default:   func() int { return 8080 },
@@ -41,13 +81,6 @@ func Load(ctx context.Context) (*Config, error) {
 				Providers: []cfg.Provider[int]{
 					cfg.EnvVar("APP_SERVER_PORT", strconv.Atoi),
 					f.Int("server", "port"),
-				},
-			},
-			EnableSSL: cfg.Schema[bool]{
-				Name: "server enable ssl",
-				Providers: []cfg.Provider[bool]{
-					cfg.EnvVar("APP_ENABLE_SSL", strconv.ParseBool),
-					f.Bool("server", "enable_ssl"),
 				},
 			},
 			Timeout: cfg.Schema[time.Duration]{
@@ -58,7 +91,7 @@ func Load(ctx context.Context) (*Config, error) {
 				},
 			},
 		},
-		DB: &db.Config{
+		DB: &DBSchema{
 			Host: cfg.Schema[string]{
 				Name:    "db host",
 				Default: func() string { return "localhost" },
@@ -93,8 +126,22 @@ func Load(ctx context.Context) (*Config, error) {
 		},
 	}
 
-	if err := c.Validate(ctx); err != nil {
-		return nil, err
+	// Calling Validate allows us to safely use schema.MustLoad below.
+	if err := schema.Validate(ctx); err != nil {
+		return Config{}, err
+	}
+
+	c := Config{
+		Server: ServerConfig{
+			Port:    schema.Server.Port.MustLoad(ctx),
+			Timeout: schema.Server.Timeout.MustLoad(ctx),
+		},
+		DB: DBConfig{
+			Host:     schema.DB.Host.MustLoad(ctx),
+			Port:     schema.DB.Port.MustLoad(ctx),
+			Username: schema.DB.Username.MustLoad(ctx),
+			Password: schema.DB.Password.MustLoad(ctx),
+		},
 	}
 
 	return c, nil

@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 
 	"github.com/zpatrick/cfg/example/config"
-	"github.com/zpatrick/cfg/example/db"
-	"github.com/zpatrick/cfg/example/svr"
+	"github.com/zpatrick/cfg/example/database"
+	"github.com/zpatrick/cfg/example/server"
 )
 
 func main() {
@@ -17,20 +16,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server, err := svr.CreateServer(ctx, *conf.Server)
+	db, err := database.CreateDB(ctx, conf.DB)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	database, err := db.CreateDB(ctx, *conf.DB)
+	svr, err := server.CreateServer(ctx, db, conf.Server)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println("service successfully configured")
-	os.Exit(run(database, server))
-}
-
-func run(database *db.DB, server *svr.Server) int {
-	return 0
+	log.Println("running service on port:", conf.Server.Port)
+	log.Fatal(svr.ListenAndServe())
 }

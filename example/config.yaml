@@ -1,7 +1,6 @@
 server:
   port: 8000
-  timeout: 30s
-  enable_ssl: true
+  timeout: 5s
 
 database:
   host: localhost
