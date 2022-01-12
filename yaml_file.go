@@ -16,10 +16,10 @@ func YAMLFile(path string) (*YAMLFileProvider, error) {
 		return nil, err
 	}
 
-	var m mapProvider
+	var m map[string]any
 	if err := yaml.Unmarshal(data, &m); err != nil {
 		return nil, err
 	}
 
-	return &YAMLFileProvider{m}, nil
+	return &YAMLFileProvider{mapProvider(m)}, nil
 }

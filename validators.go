@@ -9,9 +9,9 @@ import (
 	"go.uber.org/multierr"
 )
 
-type validatable interface{ Validate(context.Context) error }
+type validateable interface{ Validate(context.Context) error }
 
-func Validate(ctx context.Context, name string, v validatable) error {
+func Validate(ctx context.Context, name string, v validateable) error {
 	if err := v.Validate(ctx); err != nil {
 		return errors.Wrapf(err, "failed to validate %s", name)
 	}

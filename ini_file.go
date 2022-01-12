@@ -28,13 +28,24 @@ func INIFile(path string) (*INIFileProvider, error) {
 	return &INIFileProvider{f: f}, nil
 }
 
-// TODO: int64, float
 func (i *INIFileProvider) String(section, key string) Provider[string] {
 	return INIFileProvide(i, section, key, func(k *ini.Key) (string, error) { return k.String(), nil })
 }
 
+func (i *INIFileProvider) Float64(section, key string) Provider[float64] {
+	return INIFileProvide(i, section, key, func(k *ini.Key) (float64, error) { return k.Float64() })
+}
+
 func (i *INIFileProvider) Int(section, key string) Provider[int] {
 	return INIFileProvide(i, section, key, func(k *ini.Key) (int, error) { return k.Int() })
+}
+
+func (i *INIFileProvider) Int64(section, key string) Provider[int64] {
+	return INIFileProvide(i, section, key, func(k *ini.Key) (int64, error) { return k.Int64() })
+}
+
+func (i *INIFileProvider) Uint64(section, key string) Provider[uint64] {
+	return INIFileProvide(i, section, key, func(k *ini.Key) (uint64, error) { return k.Uint64() })
 }
 
 func (i *INIFileProvider) Bool(section, key string) Provider[bool] {

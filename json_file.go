@@ -1,9 +1,8 @@
 package cfg
 
 import (
+	"encoding/json"
 	"os"
-
-	"github.com/go-yaml/yaml"
 )
 
 type JSONFileProvider struct {
@@ -16,10 +15,10 @@ func JSONFile(path string) (*JSONFileProvider, error) {
 		return nil, err
 	}
 
-	var m mapProvider
-	if err := yaml.Unmarshal(data, &m); err != nil {
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
 		return nil, err
 	}
 
-	return &JSONFileProvider{m}, nil
+	return &JSONFileProvider{mapProvider(m)}, nil
 }

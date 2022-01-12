@@ -9,8 +9,8 @@ import (
 
 type mapProvider map[string]any
 
-// Traverse ...
-func (m mapProvider) Traverse(key string, keys ...string) (any, error) {
+// Get ...
+func (m mapProvider) Get(key string, keys ...string) (any, error) {
 	val, ok := m[key]
 	if !ok {
 		return nil, NoValueProvidedError
@@ -22,9 +22,9 @@ func (m mapProvider) Traverse(key string, keys ...string) (any, error) {
 
 	switch val := val.(type) {
 	case map[string]any:
-		return mapProvider(val).Traverse(keys[0], keys[1:]...)
+		return mapProvider(val).Get(keys[0], keys[1:]...)
 	case map[any]any:
-		return asMapProvider(val).Traverse(keys[0], keys[1:]...)
+		return asMapProvider(val).Get(keys[0], keys[1:]...)
 	default:
 		uerr := NewUnexpectedTypeError(map[string]any{}, val)
 		return nil, errors.Wrapf(uerr, "unable to traverse past key %s", key)
@@ -47,8 +47,20 @@ func (m mapProvider) String(section string, keys ...string) Provider[string] {
 	return mapProvide[string](m, section, keys...)
 }
 
+func (m mapProvider) Float64(section string, keys ...string) Provider[float64] {
+	return mapProvide[float64](m, section, keys...)
+}
+
 func (m mapProvider) Int(section string, keys ...string) Provider[int] {
 	return mapProvide[int](m, section, keys...)
+}
+
+func (m mapProvider) Int64(section string, keys ...string) Provider[int64] {
+	return mapProvide[int64](m, section, keys...)
+}
+
+func (m mapProvider) Uint64(section string, keys ...string) Provider[uint64] {
+	return mapProvide[uint64](m, section, keys...)
 }
 
 func (m mapProvider) Bool(section string, keys ...string) Provider[bool] {
@@ -68,7 +80,7 @@ func (m mapProvider) Duration(section string, keys ...string) Provider[time.Dura
 
 func mapProvide[T any](m mapProvider, section string, keys ...string) Provider[T] {
 	return ProviderFunc[T](func(ctx context.Context) (out T, err error) {
-		val, err := m.Traverse(section, keys...)
+		val, err := m.Get(section, keys...)
 		if err != nil {
 			return out, NoValueProvidedError
 		}

@@ -14,7 +14,7 @@ type Schema[T any] struct {
 	Providers []Provider[T]
 }
 
-func (s Schema[T]) Load(ctx context.Context) (val T, err error) {
+func (s *Schema[T]) Load(ctx context.Context) (val T, err error) {
 	for _, p := range s.Providers {
 		val, err := p.Provide(ctx)
 		if err != nil {
@@ -41,7 +41,7 @@ func (s Schema[T]) Load(ctx context.Context) (val T, err error) {
 	return val, errors.Wrap(NoValueProvidedError, s.Name)
 }
 
-func (s Schema[T]) MustLoad(ctx context.Context) T {
+func (s *Schema[T]) MustLoad(ctx context.Context) T {
 	out, err := s.Load(ctx)
 	if err != nil {
 		panic(err)
@@ -50,7 +50,7 @@ func (s Schema[T]) MustLoad(ctx context.Context) T {
 	return out
 }
 
-func (s Schema[T]) Validate(ctx context.Context) error {
+func (s *Schema[T]) Validate(ctx context.Context) error {
 	_, err := s.Load(ctx)
 	return err
 }
