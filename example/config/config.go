@@ -6,48 +6,9 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
-	"go.uber.org/multierr"
 )
 
-type Schema struct {
-	Server *ServerSchema
-	DB     *DBSchema
-}
-
-func (c *Schema) Validate(ctx context.Context) error {
-	return multierr.Combine(
-		cfg.Validate(ctx, "server", c.Server),
-		cfg.Validate(ctx, "db", c.DB),
-	)
-}
-
-type ServerSchema struct {
-	Port    cfg.Schema[int]
-	Timeout cfg.Schema[time.Duration]
-}
-
-func (s ServerSchema) Validate(ctx context.Context) error {
-	return multierr.Combine(
-		cfg.Validate(ctx, "port", s.Port),
-		cfg.Validate(ctx, "timeout", s.Timeout),
-	)
-}
-
-type DBSchema struct {
-	Host     cfg.Schema[string]
-	Port     cfg.Schema[int]
-	Username cfg.Schema[string]
-	Password cfg.Schema[string]
-}
-
-func (d DBSchema) Validate(ctx context.Context) error {
-	return multierr.Combine(
-		cfg.Validate(ctx, "host", d.Host),
-		cfg.Validate(ctx, "port", d.Port),
-		cfg.Validate(ctx, "username", d.Username),
-		cfg.Validate(ctx, "password", d.Password),
-	)
-}
+const DefaultConfigFilePath = "config.yaml"
 
 type Config struct {
 	Server ServerConfig
@@ -66,81 +27,70 @@ type DBConfig struct {
 	Password string
 }
 
-func Load(ctx context.Context) (Config, error) {
-	yamlFile, err := cfg.YAMLFile("config.yaml")
+func Load(ctx context.Context, configFilePath string) (*Config, error) {
+	yamlFile, err := cfg.YAMLFile(configFilePath)
 	if err != nil {
-		return Config{}, err
+		return nil, err
 	}
 
-	schema := &Schema{
-		Server: &ServerSchema{
-			Port: cfg.Schema[int]{
-				Name:      "server port",
-				Default:   func() int { return 8080 },
-				Validator: cfg.Between(5000, 9000),
-				Providers: []cfg.Provider[int]{
-					cfg.EnvVar("APP_SERVER_PORT", strconv.Atoi),
-					yamlFile.Int("server", "port"),
-				},
-			},
-			Timeout: cfg.Schema[time.Duration]{
-				Name: "server timeout",
-				Providers: []cfg.Provider[time.Duration]{
-					cfg.EnvVar("APP_SERVER_TIMEOUT", time.ParseDuration),
-					yamlFile.Duration("server", "timeout"),
-				},
+	settings := cfg.Settings{
+		"server.port": cfg.Setting[int]{
+			Default:   func() int { return 8080 },
+			Validator: cfg.Between(5000, 9000),
+			Providers: []cfg.Provider[int]{
+				cfg.EnvVar("APP_SERVER_PORT", strconv.Atoi),
+				yamlFile.Int("server", "port"),
 			},
 		},
-		DB: &DBSchema{
-			Host: cfg.Schema[string]{
-				Name:    "db host",
-				Default: func() string { return "localhost" },
-				Providers: []cfg.Provider[string]{
-					cfg.EnvVarStr("APP_DB_HOST"),
-					yamlFile.String("database", "host"),
-				},
+		"server.timeout": cfg.Setting[time.Duration]{
+			Providers: []cfg.Provider[time.Duration]{
+				cfg.EnvVar("APP_SERVER_TIMEOUT", time.ParseDuration),
+				yamlFile.Duration("server", "timeout"),
 			},
-			Port: cfg.Schema[int]{
-				Name:    "db port",
-				Default: func() int { return 3306 },
-				Providers: []cfg.Provider[int]{
-					cfg.EnvVar("APP_DB_PORT", strconv.Atoi),
-					yamlFile.Int("database", "port"),
-				},
+		},
+		"db.host": cfg.Setting[string]{
+			Default: func() string { return "localhost" },
+			Providers: []cfg.Provider[string]{
+				cfg.EnvVarStr("APP_DB_HOST"),
+				yamlFile.String("database", "host"),
 			},
-			Username: cfg.Schema[string]{
-				Name:      "db username",
-				Validator: cfg.OneOf("admin", "app_rw", "app_ro"),
-				Providers: []cfg.Provider[string]{
-					cfg.EnvVarStr("APP_DB_USERNAME"),
-					yamlFile.String("database", "username"),
-				},
+		},
+		"db.port": cfg.Setting[int]{
+			Default: func() int { return 3306 },
+			Providers: []cfg.Provider[int]{
+				cfg.EnvVar("APP_DB_PORT", strconv.Atoi),
+				yamlFile.Int("database", "port"),
 			},
-			Password: cfg.Schema[string]{
-				Name: "db password",
-				Providers: []cfg.Provider[string]{
-					cfg.EnvVarStr("APP_DB_PASSWORD"),
-					yamlFile.String("database", "password"),
-				},
+		},
+		"db.username": cfg.Setting[string]{
+			Validator: cfg.OneOf("admin", "app_rw", "app_ro"),
+			Providers: []cfg.Provider[string]{
+				cfg.EnvVarStr("APP_DB_USERNAME"),
+				yamlFile.String("database", "username"),
+			},
+		},
+		"db.password": cfg.Setting[string]{
+			Providers: []cfg.Provider[string]{
+				cfg.EnvVarStr("APP_DB_PASSWORD"),
+				yamlFile.String("database", "password"),
 			},
 		},
 	}
 
-	// Calling Validate allows us to safely use schema.MustLoad below.
-	if err := schema.Validate(ctx); err != nil {
-		return Config{}, err
+	if err := settings.Validate(ctx); err != nil {
+		return nil, err
 	}
 
-	c := Config{
+	c := &Config{
 		Server: ServerConfig{
-			Port:    schema.Server.Port.MustLoad(ctx),
-			Timeout: schema.Server.Timeout.MustLoad(ctx),
+			Port:    cfg.MustGet[int](ctx, settings["server.port"]),
+			Timeout: cfg.MustGet[time.Duration](ctx, settings["server.timeout"]),
 		},
 		DB: DBConfig{
-			Host:     schema.DB.Host.MustLoad(ctx),
-			Port:     schema.DB.Port.MustLoad(ctx),
-			Username: schema.DB.Username.MustLoad(ctx),
-			Password: schema.DB.Password.MustLoad(ctx),
+			Host:     cfg.MustGet[string](ctx, settings["db.host"]),
+			Port:     cfg.MustGet[int](ctx, settings["db.port"]),
+			Username: cfg.MustGet[string](ctx, settings["db.username"]),
+			Password: cfg.MustGet[string](ctx, settings["db.password"]),
 		},
 	}
 

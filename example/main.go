@@ -11,7 +11,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	conf, err := config.Load(ctx)
+	conf, err := config.Load(ctx, config.DefaultConfigFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}

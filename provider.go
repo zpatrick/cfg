@@ -19,7 +19,8 @@ func (f ProviderFunc[T]) Provide(ctx context.Context) (T, error) {
 	return f(ctx)
 }
 
-// A Providable adapts T as a Provider[T].
+// This adapts an instance of a type T turn itself into a Provider[T].
+//   var p Provider[int] = Providable[int]{5}
 type Providable[T any] struct{ V T }
 
 // Provide returns p.V.

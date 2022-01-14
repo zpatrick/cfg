@@ -5,18 +5,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 )
 
-type validateable interface{ Validate(context.Context) error }
-
-func Validate(ctx context.Context, name string, v validateable) error {
-	if err := v.Validate(ctx); err != nil {
-		return errors.Wrapf(err, "failed to validate %s", name)
-	}
-
-	return nil
+type Validateable interface {
+	Validate(context.Context) error
 }
 
 // A Validator checks whether or not a given value is considered valid.
