@@ -16,14 +16,13 @@ func ExampleFlag() {
 		panic(err)
 	}
 
-	port := cfg.Schema[int]{
-		Name: "port",
+	port := cfg.Setting[int]{
 		Providers: []cfg.Provider[int]{
 			cfg.Flag(portFlag, fs, "port"),
 		},
 	}
 
-	val, err := port.Load(context.Background())
+	val, err := port.Get(context.Background())
 	if err != nil {
 		panic(err)
 	}
@@ -40,14 +39,13 @@ func ExampleFlagWithDefault() {
 		panic(err)
 	}
 
-	port := cfg.Schema[int]{
-		Name: "port",
+	port := cfg.Setting[int]{
 		Providers: []cfg.Provider[int]{
 			cfg.FlagWithDefault(portFlag),
 		},
 	}
 
-	val, err := port.Load(context.Background())
+	val, err := port.Get(context.Background())
 	if err != nil {
 		panic(err)
 	}

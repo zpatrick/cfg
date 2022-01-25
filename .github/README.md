@@ -70,6 +70,7 @@ TODO: Note how []Providers finds the first value found in the list
 - [Flags](https://pkg.go.dev/github.com/zpatrick/cfg#Flag)
 - [INI Files](https://pkg.go.dev/github.com/zpatrick/cfg#INIFile)
 - [JSON Files](https://pkg.go.dev/github.com/zpatrick/cfg#JSONFile)
+- [TOML Files](https://pkg.go.dev/github.com/zpatrick/cfg#TOMLFile)
 - [YAML Files](https://pkg.go.dev/github.com/zpatrick/cfg#YAMLFile)
 
 

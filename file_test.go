@@ -37,6 +37,20 @@ func TestFileProviderJSON(t *testing.T) {
 	mustProvide(t, "secret", f.String("database", "password"))
 }
 
+func TestFileProviderTOML(t *testing.T) {
+	f, err := cfg.TOMLFile("testdata/config.toml")
+	assert.NilError(t, err)
+
+	mustProvide(t, 8000, f.Int64("server", "port"))
+	mustProvide(t, time.Second*30, f.Duration("server", "request_timeout"))
+	mustProvide(t, true, f.Bool("server", "enable_ssl"))
+
+	mustProvide(t, "localhost", f.String("database", "host"))
+	mustProvide(t, 3306, f.Int64("database", "port"))
+	mustProvide(t, "root", f.String("database", "username"))
+	mustProvide(t, "secret", f.String("database", "password"))
+}
+
 func TestFileProviderYAML(t *testing.T) {
 	f, err := cfg.YAMLFile("testdata/config.yaml")
 	assert.NilError(t, err)
