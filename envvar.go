@@ -6,7 +6,10 @@ import (
 )
 
 func EnvVarStr(key string) Provider[string] {
-	return &envVarProvider[string]{key: key, decode: func(s string) (string, error) { return s, nil }}
+	return &envVarProvider[string]{
+		key:    key,
+		decode: func(s string) (string, error) { return s, nil },
+	}
 }
 
 // EnvVar returns a provider for the given environment variable.

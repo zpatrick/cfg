@@ -43,6 +43,7 @@ func Load(ctx context.Context, configFilePath string) (*Config, error) {
 			},
 		},
 		"server.timeout": cfg.Setting[time.Duration]{
+			Validator: cfg.Between(0, time.Minute),
 			Providers: []cfg.Provider[time.Duration]{
 				cfg.EnvVar("APP_SERVER_TIMEOUT", time.ParseDuration),
 				yamlFile.Duration("server", "timeout"),
