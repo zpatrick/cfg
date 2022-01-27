@@ -7,14 +7,20 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/zpatrick/cfg/example/config"
 )
+
+type Config struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+}
 
 type DB struct {
 	db *sql.DB
 }
 
-func CreateDB(ctx context.Context, c config.DBConfig) (*DB, error) {
+func CreateDB(ctx context.Context, c Config) (*DB, error) {
 	mc := mysql.Config{
 		Addr:   fmt.Sprintf("%s:%d", c.Host, c.Port),
 		User:   c.Username,

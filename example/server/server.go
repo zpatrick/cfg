@@ -4,17 +4,22 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
-	"github.com/zpatrick/cfg/example/config"
 	"github.com/zpatrick/cfg/example/database"
 )
+
+type Config struct {
+	Port    int
+	Timeout time.Duration
+}
 
 type Server struct {
 	*http.Server
 	db *database.DB
 }
 
-func CreateServer(ctx context.Context, db *database.DB, c config.ServerConfig) (*Server, error) {
+func CreateServer(ctx context.Context, db *database.DB, c Config) (*Server, error) {
 	s := &Server{
 		Server: &http.Server{
 			Addr:         fmt.Sprintf("0.0.0.0:%d", c.Port),

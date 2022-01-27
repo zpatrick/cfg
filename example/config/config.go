@@ -6,25 +6,20 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/example/database"
+	"github.com/zpatrick/cfg/example/server"
 )
 
 const DefaultConfigFilePath = "config.yaml"
 
 type Config struct {
-	Server ServerConfig
-	DB     DBConfig
+	Server server.Config
+	DB     database.Config
 }
 
 type ServerConfig struct {
 	Port    int
 	Timeout time.Duration
-}
-
-type DBConfig struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
 }
 
 func Load(ctx context.Context, configFilePath string) (*Config, error) {
