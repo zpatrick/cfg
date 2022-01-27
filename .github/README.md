@@ -5,9 +5,8 @@
 The cfg package is written to house common configuration features used by microservice applications.
 This includes:
 
-- Supporting multiple configuration sources - such as environment variables, configuration files, and command-line flags.
-- Validation and defaults for specific configuration values.
-- A type-safe package API using generics.
+- Supporting multiple sources of configuration.
+- Default values and validation for specific settings.
 
 ## Usage
 _Click [here](https://github.com/zpatrick/cfg/tree/main/example) for a fully working example._
@@ -94,7 +93,7 @@ import (
 
 // Create a helper function which wraps the underlying type.
 func provideMailAddress(provider cfg.Provider[string]) cfg.Provider[*mail.Address] {
-	return cfg.ProviderFunc[*mail.Address](func(ctx context.Context) (out *mail.Address, err error) {
+	return cfg.ProviderFunc[*mail.Address](func(ctx context.Context) (*mail.Address, error) {
 		// Get the underlying value from the given provider.
 		raw, err := provider.Provide(ctx)
 		if err != nil {
@@ -114,12 +113,12 @@ func LoadConfig() (*Config, error) {
 	}
 
 	email := cfg.Setting[*mail.Address]{
-		Providers: []cfg.Provider[RoundedNumber]{
+		Providers: []cfg.Provider[*mail.Address]{
 			provideMailAddress(yamlFile.String("email")),
 		},
 	}
 
-	return nil
+	...
 }
 ```
 
