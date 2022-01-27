@@ -26,6 +26,17 @@ func (f ValidatorFunc[T]) Validate(in T) error {
 	return f(in)
 }
 
+// ValidateAll calls Validate on each element in vs.
+func ValidateAll(ctx context.Context, vs ...Validateable) error {
+	for _, v := range vs {
+		if err := v.Validate(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Between returns a validator which ensures the input is > min and < max.
 func Between[T constraints.Ordered](min, max T) Validator[T] {
 	return ValidatorFunc[T](func(in T) error {
