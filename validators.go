@@ -1,9 +1,10 @@
 package cfg
 
 import (
-	"constraints"
 	"context"
 	"fmt"
+
+	"golang.org/x/exp/constraints"
 
 	"go.uber.org/multierr"
 )
