@@ -25,6 +25,7 @@ func CreateServer(ctx context.Context, db *database.DB, c Config) (*Server, erro
 			Addr:         fmt.Sprintf("0.0.0.0:%d", c.Port),
 			ReadTimeout:  c.Timeout,
 			WriteTimeout: c.Timeout,
+			IdleTimeout:  c.Timeout,
 		},
 		db: db,
 	}

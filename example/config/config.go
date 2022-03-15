@@ -86,11 +86,11 @@ func Load(ctx context.Context, configFilePath string) (*Config, error) {
 	}
 
 	c := &Config{
-		Server: ServerConfig{
+		Server: server.Config{
 			Port:    serverPort.MustGet(ctx),
 			Timeout: serverTimeout.MustGet(ctx),
 		},
-		DB: DBConfig{
+		DB: database.Config{
 			Host:     dbHost.MustGet(ctx),
 			Port:     dbPort.MustGet(ctx),
 			Username: dbUsername.MustGet(ctx),
