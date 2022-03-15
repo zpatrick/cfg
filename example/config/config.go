@@ -17,11 +17,6 @@ type Config struct {
 	DB     database.Config
 }
 
-type ServerConfig struct {
-	Port    int
-	Timeout time.Duration
-}
-
 func Load(ctx context.Context, configFilePath string) (*Config, error) {
 	yamlFile, err := cfg.YAMLFile(configFilePath)
 	if err != nil {
