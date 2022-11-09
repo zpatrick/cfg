@@ -19,9 +19,11 @@ func (f ProviderFunc[T]) Provide(ctx context.Context) (T, error) {
 	return f(ctx)
 }
 
-// This adapts an instance of a type T turn itself into a Provider[T].
-//   var p Provider[int] = Providable[int]{5}
-type Providable[T any] struct{ V T }
-
-// Provide returns p.V.
-func (p Providable[T]) Provide(context.Context) (T, error) { return p.V, nil }
+// StaticProvider adapts v into a Provider[T].
+//
+//	var p Provider[int] = StaticProvider(5)
+func StaticProvider[T any](v T) Provider[T] {
+	return ProviderFunc[T](func(ctx context.Context) (T, error) {
+		return v, nil
+	})
+}
