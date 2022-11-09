@@ -16,18 +16,13 @@ func ExampleFlag() {
 		panic(err)
 	}
 
-	port := cfg.Setting[int]{
-		Providers: []cfg.Provider[int]{
-			cfg.Flag(portFlag, fs, "port"),
-		},
-	}
-
-	val, err := port.Get(context.Background())
+	portProvider := cfg.Flag(portFlag, fs, "port")
+	port, err := portProvider.Provide(context.Background())
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("port is:", val)
+	fmt.Println("port is:", port)
 	// Output: port is: 9090
 }
 
@@ -39,17 +34,12 @@ func ExampleFlagWithDefault() {
 		panic(err)
 	}
 
-	port := cfg.Setting[int]{
-		Providers: []cfg.Provider[int]{
-			cfg.FlagWithDefault(portFlag),
-		},
-	}
-
-	val, err := port.Get(context.Background())
+	portProvider := cfg.FlagWithDefault(portFlag)
+	port, err := portProvider.Provide(context.Background())
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("port is:", val)
+	fmt.Println("port is:", port)
 	// Output: port is: 8000
 }

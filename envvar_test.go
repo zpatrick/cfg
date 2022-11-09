@@ -15,13 +15,13 @@ func ExampleEnvVar() {
 	const key = "APP_PORT"
 	os.Setenv(key, "9090")
 
-	provider := cfg.EnvVar(key, strconv.Atoi)
-	val, err := provider.Provide(context.Background())
+	appPortProvider := cfg.EnvVar(key, strconv.Atoi)
+	appPort, err := appPortProvider.Provide(context.Background())
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("port is:", val)
+	fmt.Println("port is:", appPort)
 	// Output: port is: 9090
 }
 

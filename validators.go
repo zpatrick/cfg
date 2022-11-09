@@ -38,14 +38,14 @@ func ValidateAll(ctx context.Context, vs ...Validateable) error {
 	return nil
 }
 
-// Between returns a validator which ensures the input is > min and < max.
+// Between returns a validator which ensures the input is >= min and <= max.
 func Between[T constraints.Ordered](min, max T) Validator[T] {
 	return ValidatorFunc[T](func(in T) error {
 		switch {
-		case in <= min:
-			return fmt.Errorf("input %v is <= than the allowed minimum %v", in, min)
-		case in >= max:
-			return fmt.Errorf("input %v is >= than the allowed maximum %v", in, max)
+		case in < min:
+			return fmt.Errorf("input %v is < than the allowed minimum %v", in, min)
+		case in > max:
+			return fmt.Errorf("input %v is > than the allowed maximum %v", in, max)
 		default:
 			return nil
 		}
@@ -77,6 +77,7 @@ func Or[T any](a, b Validator[T], validators ...Validator[T]) Validator[T] {
 		for _, v := range all {
 			if err := v.Validate(in); err != nil {
 				errs = append(errs, err)
+				continue
 			}
 
 			return nil

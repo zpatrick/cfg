@@ -7,7 +7,9 @@ import (
 )
 
 type Setting[T any] struct {
-	Name      string
+	Name string
+	// Default specifies the default value to use if no value is provided by Providers.
+	// If this field is nil, a NoValueProvidedError will be returned instead.
 	Default   func() T
 	Validator Validator[T]
 	Providers []Provider[T]
