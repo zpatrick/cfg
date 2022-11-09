@@ -15,7 +15,7 @@ type Setting[T any] struct {
 	Providers []Provider[T]
 }
 
-func (s *Setting[T]) Get(ctx context.Context) (val T, err error) {
+func (s Setting[T]) Get(ctx context.Context) (val T, err error) {
 	for _, p := range s.Providers {
 		val, err := p.Provide(ctx)
 		if err != nil {
@@ -42,16 +42,11 @@ func (s *Setting[T]) Get(ctx context.Context) (val T, err error) {
 	return val, errors.Wrapf(NoValueProvidedError, s.Name)
 }
 
-func (s *Setting[T]) MustGet(ctx context.Context) T {
+func (s Setting[T]) MustGet(ctx context.Context, errs ErrorAggregator) T {
 	out, err := s.Get(ctx)
 	if err != nil {
-		panic(err)
+		errs.Add(errors.Wrapf(err, "failed to get %s", s.Name))
 	}
 
 	return out
-}
-
-func (s Setting[T]) Validate(ctx context.Context) error {
-	_, err := s.Get(ctx)
-	return err
 }

@@ -7,19 +7,17 @@ import (
 )
 
 func TestBetween(t *testing.T) {
+	assert.NilError(t, Between(0, 2).Validate(0))
 	assert.NilError(t, Between(0, 2).Validate(1))
-	assert.NilError(t, Between(-1, 1).Validate(0))
+	assert.NilError(t, Between(0, 2).Validate(2))
 	assert.NilError(t, Between(8.5, 8.6).Validate(8.55))
 }
 
 func TestBetweenError(t *testing.T) {
-	assert.Error(t, Between(0, 2).Validate(0))
-	assert.Error(t, Between(0, 2).Validate(2))
 	assert.Error(t, Between(0, 2).Validate(-1))
 	assert.Error(t, Between(0, 2).Validate(3))
 	assert.Error(t, Between(8.5, 8.6).Validate(8.4))
-
-	Or(OneOf(22, 90), Between(8000, 9000))
+	assert.Error(t, Between(8.5, 8.6).Validate(8.7))
 }
 
 func TestOneOf(t *testing.T) {

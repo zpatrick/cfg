@@ -3,6 +3,8 @@ package cfg
 import (
 	"fmt"
 	"reflect"
+
+	"go.uber.org/multierr"
 )
 
 type sentinelError string
@@ -26,4 +28,22 @@ func NewUnexpectedTypeError(expectedVal, providedVal interface{}) *UnexpectedTyp
 
 func (e *UnexpectedTypeError) Error() string {
 	return fmt.Sprintf("unexpected type error: provided type was %s (expected %s)", e.Provided, e.Expected)
+}
+
+type ErrorAggregator struct {
+	errors []error
+}
+
+func NewErrorAggregator() *ErrorAggregator {
+	return &ErrorAggregator{
+		errors: []error{},
+	}
+}
+
+func (e *ErrorAggregator) Add(err error) {
+	e.errors = append(e.errors, err)
+}
+
+func (e *ErrorAggregator) Err() error {
+	return multierr.Combine(e.errors...)
 }
