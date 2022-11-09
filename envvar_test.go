@@ -11,18 +11,31 @@ import (
 	"github.com/zpatrick/testx/assert"
 )
 
-func ExampleEnvVar() {
-	const key = "APP_PORT"
-	os.Setenv(key, "9090")
+type Config struct {
+	Host string
+	Port int
+}
 
-	appPortProvider := cfg.EnvVar(key, strconv.Atoi)
-	appPort, err := appPortProvider.Provide(context.Background())
-	if err != nil {
+func ExampleEnvVar() {
+	ctx := context.Background()
+	errs := cfg.NewErrorAggregator()
+
+	c := Config{
+		Host: cfg.Setting[string]{
+			Name:     "host",
+			Provider: cfg.EnvVarStr("APP_HOST"),
+		}.MustGet(ctx, errs),
+		Port: cfg.Setting[int]{
+			Name:     "port",
+			Provider: cfg.EnvVar("APP_PORT", strconv.Atoi),
+		}.MustGet(ctx, errs),
+	}
+
+	if err := errs.Err(); err != nil {
 		panic(err)
 	}
 
-	fmt.Println("port is:", appPort)
-	// Output: port is: 9090
+	fmt.Printf("host: %s, port: %d\n", c.Host, c.Port)
 }
 
 func TestEnvVarNoValue(t *testing.T) {
