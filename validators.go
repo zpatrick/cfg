@@ -9,10 +9,6 @@ import (
 	"go.uber.org/multierr"
 )
 
-type Validateable interface {
-	Validate(context.Context) error
-}
-
 // A Validator checks whether or not a given value is considered valid.
 type Validator[T any] interface {
 	// Validate returns an error if the value of in is considered invalid.
