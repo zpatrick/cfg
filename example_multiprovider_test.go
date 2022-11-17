@@ -8,6 +8,27 @@ import (
 	"github.com/zpatrick/cfg"
 )
 
+// TOOD: How to make an easy conversion?
+
+type Environment string
+
+const (
+	Development Environment = "development"
+	Staging     Environment = "staging"
+	Production  Environment = "production"
+)
+
+func Test() {
+	env := cfg.Setting[Environment]{
+		Name:      "environment",
+		Default:   cfg.Pointer(Development),
+		Validator: cfg.OneOf(Development, Staging, Production),
+		Provider: cfg.ProviderFunc[Environment](func(context.Context) (Environment, error) {
+			return Environment(os.Getenv("APP_ENV")), nil
+		}),
+	}
+}
+
 type MyConfig struct {
 	EnableTLS bool
 
@@ -47,7 +68,7 @@ func ExampleMultiProvider() {
 		}.MustGet(ctx, errs),
 		DBPort: cfg.Setting[int]{
 			Name:    "DBPort",
-			Default: func() int { return 3306 },
+			Default: cfg.Pointer(3306),
 			Provider: cfg.MultiProvider[int]{
 				defaultYaml.Int("database", "port"),
 				environmentYaml.Int("database", "port"),

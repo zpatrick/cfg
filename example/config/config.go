@@ -26,7 +26,7 @@ const (
 func Load(ctx context.Context, configFilePath string) (*Config, error) {
 	env, err := cfg.Setting[string]{
 		Name:      "environment",
-		Default:   func() string { return Development },
+		Default:   cfg.Pointer(Development),
 		Validator: cfg.OneOf(Development, Staging, Production),
 		Provider:  cfg.EnvVarStr("APP_ENV"),
 	}.Get(ctx)
@@ -45,7 +45,7 @@ func Load(ctx context.Context, configFilePath string) (*Config, error) {
 			EnableTLS: env == Production,
 			Port: cfg.Setting[int]{
 				Name:      "Server Port",
-				Default:   func() int { return 8080 },
+				Default:   cfg.Pointer(8080),
 				Validator: cfg.Between(5000, 9000),
 				Provider: cfg.MultiProvider[int]{
 					cfg.EnvVar("APP_SERVER_PORT", strconv.Atoi),
@@ -64,7 +64,7 @@ func Load(ctx context.Context, configFilePath string) (*Config, error) {
 		DB: database.Config{
 			Host: cfg.Setting[string]{
 				Name:    "DB Host",
-				Default: func() string { return "localhost" },
+				Default: cfg.Pointer("localhost"),
 				Provider: cfg.MultiProvider[string]{
 					cfg.EnvVarStr("APP_DB_HOST"),
 					yamlFile.String("database", "host"),
@@ -72,7 +72,7 @@ func Load(ctx context.Context, configFilePath string) (*Config, error) {
 			}.MustGet(ctx, errs),
 			Port: cfg.Setting[int]{
 				Name:    "DB Port",
-				Default: func() int { return 3306 },
+				Default: cfg.Pointer(3306),
 				Provider: cfg.MultiProvider[int]{
 					cfg.EnvVar("APP_DB_PORT", strconv.Atoi),
 					yamlFile.Int("database", "port"),

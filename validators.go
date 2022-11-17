@@ -1,7 +1,6 @@
 package cfg
 
 import (
-	"context"
 	"fmt"
 
 	"golang.org/x/exp/constraints"
