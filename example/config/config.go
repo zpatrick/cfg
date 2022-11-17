@@ -8,6 +8,7 @@ import (
 	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/cfg/example/database"
 	"github.com/zpatrick/cfg/example/server"
+	"github.com/zpatrick/cfg/providers/yaml"
 )
 
 const DefaultConfigFilePath = "config.yaml"
@@ -28,13 +29,13 @@ func Load(ctx context.Context, configFilePath string) (*Config, error) {
 		Name:      "environment",
 		Default:   cfg.Pointer(Development),
 		Validator: cfg.OneOf(Development, Staging, Production),
-		Provider:  cfg.EnvVarStr("APP_ENV"),
+		Provider:  envvar.Newf("APP_ENV", strconv.Itoa),
 	}.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	yamlFile, err := cfg.YAMLFile(configFilePath)
+	yamlFile, err := yaml.New(configFilePath)
 	if err != nil {
 		return nil, err
 	}
