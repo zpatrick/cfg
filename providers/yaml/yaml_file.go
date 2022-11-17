@@ -1,4 +1,4 @@
-package cfg
+package yaml
 
 import (
 	"os"

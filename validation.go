@@ -8,10 +8,10 @@ import (
 	"go.uber.org/multierr"
 )
 
-// A Validator checks whether or not a given value is considered valid.
+// A Validator checks whether or not a given value T is considered valid.
 type Validator[T any] interface {
-	// Validate returns an error if the value of in is considered invalid.
-	Validate(in T) error
+	// Validate returns an error if input is considered invalid.
+	Validate(input T) error
 }
 
 // A ValidatorFunc is an adapter type which allows functions to be used as Validators.
@@ -52,10 +52,25 @@ func OneOf[T comparable](vals ...T) Validator[T] {
 	})
 }
 
+// And combines the given validators into a single validator,
+// requiring each validator check to succeed.
+func And[T any](a, b Validator[T], vs ...Validator[T]) Validator[T] {
+	all := append([]Validator[T]{a, b}, vs...)
+	return ValidatorFunc[T](func(in T) error {
+		for _, v := range all {
+			if err := v.Validate(in); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 // Or combines the given validators into a single validator,
 // requiring only one validator check to succeed.
-func Or[T any](a, b Validator[T], validators ...Validator[T]) Validator[T] {
-	all := append([]Validator[T]{a, b}, validators...)
+func Or[T any](a, b Validator[T], vs ...Validator[T]) Validator[T] {
+	all := append([]Validator[T]{a, b}, vs...)
 	return ValidatorFunc[T](func(in T) error {
 		var errs []error
 		for _, v := range all {
@@ -68,20 +83,5 @@ func Or[T any](a, b Validator[T], validators ...Validator[T]) Validator[T] {
 		}
 
 		return multierr.Combine(errs...)
-	})
-}
-
-// And combines the given validators into a single validator,
-// requiring each validator check to succeed.
-func And[T any](a, b Validator[T], validators ...Validator[T]) Validator[T] {
-	all := append([]Validator[T]{a, b}, validators...)
-	return ValidatorFunc[T](func(in T) error {
-		for _, v := range all {
-			if err := v.Validate(in); err != nil {
-				return err
-			}
-		}
-
-		return nil
 	})
 }

@@ -1,4 +1,4 @@
-package cfg_test
+package flags_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/providers/flags"
 )
 
 func ExampleFlag() {
@@ -34,7 +35,7 @@ func ExampleFlagWithDefault() {
 		panic(err)
 	}
 
-	portProvider := cfg.FlagWithDefault(portFlag)
+	portProvider := flags.FlagWithDefault(portFlag)
 	port, err := portProvider.Provide(context.Background())
 	if err != nil {
 		panic(err)

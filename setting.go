@@ -6,6 +6,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Pointer returns a pointer to t.
+func Pointer[T any](t T) *T {
+	return &t
+}
+
 type Setting[T any] struct {
 	Name string
 	// Default specifies the default value to use if no value is provided by the Provider.
@@ -18,12 +23,8 @@ type Setting[T any] struct {
 func (s Setting[T]) Get(ctx context.Context) (T, error) {
 	val, err := s.Provider.Provide(ctx)
 	if err != nil {
-		if errors.Is(err, NoValueProvidedError) {
-			if s.Default != nil {
-				return *s.Default, nil
-			}
-
-			return val, err
+		if errors.Is(err, NoValueProvidedError) && s.Default != nil {
+			return *s.Default, nil
 		}
 
 		return val, err
