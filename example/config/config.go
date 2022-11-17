@@ -17,7 +17,23 @@ type Config struct {
 	DB     database.Config
 }
 
+const (
+	Development = "development"
+	Staging     = "staging"
+	Production  = "production"
+)
+
 func Load(ctx context.Context, configFilePath string) (*Config, error) {
+	env, err := cfg.Setting[string]{
+		Name:      "environment",
+		Default:   func() string { return Development },
+		Validator: cfg.OneOf(Development, Staging, Production),
+		Provider:  cfg.EnvVarStr("APP_ENV"),
+	}.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	yamlFile, err := cfg.YAMLFile(configFilePath)
 	if err != nil {
 		return nil, err
@@ -26,6 +42,7 @@ func Load(ctx context.Context, configFilePath string) (*Config, error) {
 	errs := cfg.NewErrorAggregator()
 	c := Config{
 		Server: server.Config{
+			EnableTLS: env == Production,
 			Port: cfg.Setting[int]{
 				Name:      "Server Port",
 				Default:   func() int { return 8080 },

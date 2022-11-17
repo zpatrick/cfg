@@ -10,8 +10,9 @@ import (
 )
 
 type Config struct {
-	Port    int
-	Timeout time.Duration
+	Port      int
+	Timeout   time.Duration
+	EnableTLS bool
 }
 
 type Server struct {
