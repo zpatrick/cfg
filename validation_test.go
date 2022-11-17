@@ -52,3 +52,8 @@ func TestOr(t *testing.T) {
 		cfg.Between(0, 50),
 	).Validate(101))
 }
+
+func TestNot(t *testing.T) {
+	assert.NilError(t, cfg.Not(cfg.OneOf(1, 2, 3)).Validate(0))
+	assert.Error(t, cfg.Not(cfg.OneOf(1, 2, 3)).Validate(1))
+}

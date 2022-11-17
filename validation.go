@@ -85,3 +85,14 @@ func Or[T any](a, b Validator[T], vs ...Validator[T]) Validator[T] {
 		return multierr.Combine(errs...)
 	})
 }
+
+// Not returns a new validator which throws an error when v does not.
+func Not[T any](v Validator[T]) Validator[T] {
+	return ValidatorFunc[T](func(in T) error {
+		if err := v.Validate(in); err == nil {
+			return fmt.Errorf("not condition failed")
+		}
+
+		return nil
+	})
+}
