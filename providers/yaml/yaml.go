@@ -4,13 +4,14 @@ import (
 	"os"
 
 	"github.com/go-yaml/yaml"
+	"github.com/zpatrick/cfg/providers/generic"
 )
 
 type YAMLFileProvider struct {
-	mapProvider
+	generic.Provider
 }
 
-func YAMLFile(path string) (*YAMLFileProvider, error) {
+func NewFile(path string) (*YAMLFileProvider, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -21,5 +22,5 @@ func YAMLFile(path string) (*YAMLFileProvider, error) {
 		return nil, err
 	}
 
-	return &YAMLFileProvider{mapProvider(m)}, nil
+	return &YAMLFileProvider{generic.Provider(m)}, nil
 }

@@ -96,3 +96,10 @@ func Not[T any](v Validator[T]) Validator[T] {
 		return nil
 	})
 }
+
+type MyConfig struct {
+	Port       int
+	Addr       string
+	DBHost     string
+	DBUsername string
+}

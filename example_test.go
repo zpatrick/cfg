@@ -2,51 +2,87 @@ package cfg_test
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/cfg/providers/envvar"
-	"github.com/zpatrick/cfg/providers/flags"
+	"github.com/zpatrick/cfg/providers/yaml"
 )
 
-func ExampleSetting_validation() {
-	userName := cfg.Setting[string]{
-		Name:      "UserName",
-		Validator: cfg.OneOf("admin", "guest"),
-		Provider:  cfg.StaticProvider("other"),
-	}
-
-	_, err := userName.Get(context.Background())
-	fmt.Println(err)
-	// Output: validation failed: input foo not contained in [admin guest]
+type Config struct {
+	ServerPort       int
+	ServerTimeout    time.Duration
+	DatabaseAddress  string
+	DatabaseUsername string
+	DatabasePassword string
 }
 
-func ExampleSetting_default() {
-	port := cfg.Setting[int]{
-		Name:     "port",
-		Default:  cfg.Pointer(8080),
-		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
+func LoadConfig(ctx context.Context, path string) (*Config, error) {
+	yamlFile, err := yaml.NewFile(path)
+	if err != nil {
+		return nil, err
 	}
 
-	val, _ := port.Get(context.Background())
-	fmt.Println(val)
-	// Output: 8080
+	errs := cfg.NewErrorAggregator()
+	c := Config{
+		ServerPort: cfg.Get(ctx, errs, cfg.Setting[int]{
+			Name:    "Server Port",
+			Default: cfg.Pointer(8080),
+			Provider: cfg.MultiProvider[int]{
+				envvar.Newf("APP_SERVER_PORT", strconv.Atoi),
+				yamlFile.Int("server", "port"),
+			},
+		}),
+		ServerTimeout: cfg.Get(ctx, errs, cfg.Setting[time.Duration]{
+			Name:      "Server Timeout",
+			Default:   cfg.Pointer(time.Second * 30),
+			Validator: cfg.Between(time.Second, time.Minute*5),
+			Provider: cfg.MultiProvider[time.Duration]{
+				envvar.Newf("APP_SERVER_TIMEOUT", time.ParseDuration),
+				yamlFile.Duration("server", "timeout"),
+			},
+		}),
+		DatabaseAddress: cfg.Get(ctx, errs, cfg.Setting[string]{
+			Name:    "Database Address",
+			Default: cfg.Pointer("localhost:3306"),
+			Provider: cfg.MultiProvider[string]{
+				envvar.New("APP_DATABASE_ADDR"),
+				yamlFile.String("db", "address"),
+			},
+		}),
+		DatabasePassword: cfg.Get(ctx, errs, cfg.Setting[string]{
+			Name:    "Database Address",
+			Default: cfg.Pointer("localhost:3306"),
+			Provider: cfg.MultiProvider[string]{
+				envvar.New("APP_DATABASE_ADDR"),
+				yamlFile.String("db", "address"),
+			},
+		}),
+		DatabaseUsername: cfg.Get(ctx, errs, cfg.Setting[string]{
+			Name:      "Database Username",
+			Validator: cfg.OneOf("readonly_user", "readwrite_user"),
+			Provider: cfg.MultiProvider[string]{
+				envvar.New("APP_DATABASE_USERNAME"),
+				yamlFile.String("db", "username"),
+			},
+		}),
+	}
+
+	if err := errs.Err(); err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }
 
-func ExampleSetting_multiProvider() {
-	addrFlag := flag.String("addr", "localhost", "")
-
-	addr := cfg.Setting[string]{
-		Name: "Address",
-		Provider: cfg.MultiProvider[string]{
-			envvar.New("APP_ADDR"),
-			flags.NewWithDefault(addrFlag),
-		},
+func Example() {
+	ctx := context.Background()
+	conf, err := LoadConfig(ctx, "config.yaml")
+	if err != nil {
+		panic(err)
 	}
 
-	val, _ := addr.Get(context.Background())
-	fmt.Println(val)
-	// Output: localhost
+	fmt.Println("starting server on port", conf.ServerPort)
 }
