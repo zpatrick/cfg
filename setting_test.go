@@ -1,42 +1,49 @@
 package cfg_test
 
-// TODO: fix
-// func ExampleSetting_validation() {
-// 	userName := cfg.Setting[string]{
-// 		Name:      "UserName",
-// 		Validator: cfg.OneOf("admin", "guest"),
-// 		Provider:  cfg.StaticProvider("other"),
-// 	}
+import (
+	"context"
+	"flag"
+	"fmt"
+	"strconv"
 
-// 	_, err := userName.Get(context.Background())
-// 	fmt.Println(err)
-// 	// Output: validation failed: input other not contained in [admin guest]
-// }
+	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/providers/envvar"
+	"github.com/zpatrick/cfg/providers/flags"
+)
 
-// func ExampleSetting_default() {
-// 	port := cfg.Setting[int]{
-// 		Name:     "port",
-// 		Default:  cfg.Pointer(8080),
-// 		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
-// 	}
+func ExampleSetting_validation() {
+	userName := cfg.Setting[string]{
+		Validator: cfg.OneOf("admin", "guest"),
+		Provider:  cfg.StaticProvider("other"),
+	}
 
-// 	val, _ := port.Get(context.Background())
-// 	fmt.Println(val)
-// 	// Output: 8080
-// }
+	err := userName.Load(context.Background())
+	fmt.Println(err)
+	// Output: validation failed: input other not contained in [admin guest]
+}
 
-// func ExampleSetting_multiProvider() {
-// 	addrFlag := flag.String("addr", "localhost", "")
+func ExampleSetting_default() {
+	port := cfg.Setting[int]{
+		Default:  cfg.Pointer(8080),
+		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
+	}
 
-// 	addr := cfg.Setting[string]{
-// 		Name: "Address",
-// 		Provider: cfg.MultiProvider[string]{
-// 			envvar.New("APP_ADDR"),
-// 			flags.NewWithDefault(addrFlag),
-// 		},
-// 	}
+	port.Load(context.Background())
+	fmt.Println(port.Val())
+	// Output: 8080
+}
 
-// 	val, _ := addr.Get(context.Background())
-// 	fmt.Println(val)
-// 	// Output: localhost
-// }
+func ExampleSetting_multiProvider() {
+	addrFlag := flag.String("addr", "localhost", "")
+
+	addr := cfg.Setting[string]{
+		Provider: cfg.MultiProvider[string]{
+			envvar.New("APP_ADDR"),
+			flags.NewWithDefault(addrFlag),
+		},
+	}
+
+	addr.Load(context.Background())
+	fmt.Println(addr.Val())
+	// Output: localhost
+}

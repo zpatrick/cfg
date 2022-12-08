@@ -8,20 +8,20 @@ import (
 	"github.com/zpatrick/testx/assert"
 )
 
-type Example struct {
+type TestConfig struct {
 	private int
 	A       *cfg.Setting[int]
 	B       *cfg.Setting[int]
-	Nested  NestedExample
+	Nested  NestedTestConfig
 }
 
-type NestedExample struct {
+type NestedTestConfig struct {
 	C *cfg.Setting[int]
 	D *cfg.Setting[int]
 }
 
 func TestLoad(t *testing.T) {
-	c := &Example{
+	c := &TestConfig{
 		private: 1,
 		A: &cfg.Setting[int]{
 			Provider: cfg.StaticProvider(1),
@@ -29,13 +29,12 @@ func TestLoad(t *testing.T) {
 		B: &cfg.Setting[int]{
 			Provider: cfg.StaticProvider(2),
 		},
-		Nested: NestedExample{
+		Nested: NestedTestConfig{
 			C: &cfg.Setting[int]{
 				Provider: cfg.StaticProvider(3),
 			},
 			D: &cfg.Setting[int]{
-				Provider:  cfg.StaticProvider(4),
-				Validator: cfg.Between(1, 2),
+				Provider: cfg.StaticProvider(4),
 			},
 		},
 	}
