@@ -12,7 +12,7 @@ import (
 )
 
 func ExampleSetting_validation() {
-	userName := cfg.Setting[string]{
+	userName := &cfg.Setting[string]{
 		Validator: cfg.OneOf("admin", "guest"),
 		Provider:  cfg.StaticProvider("other"),
 	}
@@ -23,7 +23,7 @@ func ExampleSetting_validation() {
 }
 
 func ExampleSetting_default() {
-	port := cfg.Setting[int]{
+	port := &cfg.Setting[int]{
 		Default:  cfg.Pointer(8080),
 		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
 	}
@@ -36,7 +36,7 @@ func ExampleSetting_default() {
 func ExampleSetting_multiProvider() {
 	addrFlag := flag.String("addr", "localhost", "")
 
-	addr := cfg.Setting[string]{
+	addr := &cfg.Setting[string]{
 		Provider: cfg.MultiProvider[string]{
 			envvar.New("APP_ADDR"),
 			flags.NewWithDefault(addrFlag),

@@ -15,26 +15,24 @@ import (
 func ExampleNew() {
 	os.Setenv("APP_ADDR", "localhost")
 
-	addr := cfg.Setting[string]{
-		Name:     "address",
+	addr := &cfg.Setting[string]{
 		Provider: envvar.New("APP_ADDR"),
 	}
 
-	val, _ := addr.Get(context.Background())
-	fmt.Println(val)
+	addr.Load(context.Background())
+	fmt.Println(addr.Val())
 	// Output: localhost
 }
 
 func ExampleNewf() {
 	os.Setenv("APP_PORT", "8080")
 
-	port := cfg.Setting[int]{
-		Name:     "port",
+	port := &cfg.Setting[int]{
 		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
 	}
 
-	val, _ := port.Get(context.Background())
-	fmt.Println(val)
+	port.Load(context.Background())
+	fmt.Println(port.Val())
 	// Output: 8080
 }
 

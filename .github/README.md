@@ -31,7 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	port := cfg.Setting[int]{
+	port := &cfg.Setting[int]{
 		Default: func() int { return 8080 },
 		Providers: []cfg.Provider[int]{
 			cfg.EnvVar("APP_SERVER_PORT", strconv.Atoi),
@@ -39,7 +39,7 @@ func main() {
 		},
 	}
 
-	timeout := cfg.Setting[time.Duration]{
+	timeout := &cfg.Setting[time.Duration]{
 		Validator: cfg.Between(time.Second, time.Minute*2),
 		Providers: []cfg.Provider[time.Duration]{
 			cfg.EnvVar("APP_SERVER_TIMEOUT", time.ParseDuration),

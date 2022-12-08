@@ -1,16 +1,18 @@
-package cfg
+package toml
 
 import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/zpatrick/cfg/providers/generic"
 )
 
-type TOMLFileProvider struct {
-	mapProvider
+// TODO: comments
+type Provider struct {
+	generic.Provider
 }
 
-func TOMLFile(path string) (*TOMLFileProvider, error) {
+func New(path string) (*Provider, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -21,5 +23,5 @@ func TOMLFile(path string) (*TOMLFileProvider, error) {
 		return nil, err
 	}
 
-	return &TOMLFileProvider{mapProvider(m)}, nil
+	return &Provider{generic.Provider(m)}, nil
 }

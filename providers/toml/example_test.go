@@ -1,4 +1,4 @@
-package yaml_test
+package toml_test
 
 import (
 	"context"
@@ -7,21 +7,24 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/providers/yaml"
+	"github.com/zpatrick/cfg/providers/toml"
 )
 
 type Config struct {
 	Timeout    *cfg.Setting[time.Duration]
-	ServerPort *cfg.Setting[int]
+	ServerPort *cfg.Setting[int64]
 	ServerAddr *cfg.Setting[string]
 }
 
 func Example() {
 	const data = `
-timeout: 5s
-server:
-  port: 8080
-  addr: localhost
+timeout = "5s"
+
+[servers]
+
+	[servers.alpha]
+	port = 8080
+	addr = "localhost"
 `
 
 	path, err := cfg.WriteTempFile("", data)
@@ -30,20 +33,20 @@ server:
 	}
 	defer os.Remove(path)
 
-	yamlFile, err := yaml.New(path)
+	tomlFile, err := toml.New(path)
 	if err != nil {
 		panic(err)
 	}
 
 	c := &Config{
 		Timeout: &cfg.Setting[time.Duration]{
-			Provider: yamlFile.Duration("timeout"),
+			Provider: tomlFile.Duration("timeout"),
 		},
-		ServerPort: &cfg.Setting[int]{
-			Provider: yamlFile.Int("server", "port"),
+		ServerPort: &cfg.Setting[int64]{
+			Provider: tomlFile.Int64("servers", "alpha", "port"),
 		},
 		ServerAddr: &cfg.Setting[string]{
-			Provider: yamlFile.String("server", "addr"),
+			Provider: tomlFile.String("servers", "alpha", "addr"),
 		},
 	}
 
