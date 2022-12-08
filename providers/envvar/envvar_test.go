@@ -2,6 +2,7 @@ package envvar_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 	"testing"
@@ -12,21 +13,29 @@ import (
 )
 
 func ExampleNew() {
+	os.Setenv("APP_ADDR", "localhost")
+
 	addr := cfg.Setting[string]{
 		Name:     "address",
 		Provider: envvar.New("APP_ADDR"),
 	}
 
-	addr.Get(context.Background())
+	val, _ := addr.Get(context.Background())
+	fmt.Println(val)
+	// Output: localhost
 }
 
 func ExampleNewf() {
+	os.Setenv("APP_PORT", "8080")
+
 	port := cfg.Setting[int]{
 		Name:     "port",
 		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
 	}
 
-	port.Get(context.Background())
+	val, _ := port.Get(context.Background())
+	fmt.Println(val)
+	// Output: 8080
 }
 
 func TestNew_returnsProperValue(t *testing.T) {
