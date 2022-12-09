@@ -28,6 +28,10 @@ type Setting[T any] struct {
 // If no value is provided and s.Default is set, s.Default will be used.
 // If no value is provided and s.Default is not set, a NoValueProvidedError will be returned.
 func (s *Setting[T]) Load(ctx context.Context) error {
+	if s.Provider == nil {
+		return errors.New("provider is nil")
+	}
+
 	val, err := s.Provider.Provide(ctx)
 	if err != nil {
 		if !errors.Is(err, NoValueProvidedError) {

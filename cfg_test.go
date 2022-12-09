@@ -23,7 +23,6 @@ type nested struct {
 func TestLoad(t *testing.T) {
 	c := struct {
 		embedded
-		// TODO: star embedded
 		Nested    nested
 		NestedPtr *nested
 		P1        cfg.Setting[int]

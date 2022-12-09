@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/go-ini/ini v1.66.2
+	github.com/go-sql-driver/mysql v1.7.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1
 	github.com/zpatrick/testx v0.0.0-20220105184740-5b9b2b649c02
