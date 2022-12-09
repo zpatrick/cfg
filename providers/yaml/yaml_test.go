@@ -3,7 +3,6 @@ package yaml_test
 import (
 	"os"
 	"testing"
-	"time"
 
 	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/cfg/providers/yaml"
@@ -28,9 +27,12 @@ server:
 	f, err := yaml.New(path)
 	assert.NilError(t, err)
 
-	cfg.AssertProvides(t, f.String("root"), "hello")
-	cfg.AssertProvides(t, f.Int("server", "port"), 8080)
+	//cfg.AssertProvides(t, f.String("root"), "hello")
+	//cfg.AssertProvides(t, f.Int("server", "port"), 8080)
 	cfg.AssertProvides(t, f.Bool("server", "enabled"), true)
-	cfg.AssertProvides(t, f.Duration("server", "timeout", "read"), time.Second*5)
-	cfg.AssertProvides(t, f.Float64("server", "percent"), 8.5)
+	//cfg.AssertProvides(t, f.Duration("server", "timeout", "read"), time.Second*5)
+	//cfg.AssertProvides(t, f.Float64("server", "percent"), 8.5)
+
+	// _, err = f.Int("invalid").Provide(context.Background())
+	// assert.ErrorIs(t, err, cfg.NoValueProvidedError)
 }

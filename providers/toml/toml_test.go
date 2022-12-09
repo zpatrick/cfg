@@ -1,6 +1,7 @@
 package toml_test
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -35,4 +36,7 @@ enabled = true
 	cfg.AssertProvides(t, f.Int64("servers", "alpha", "port"), 8080)
 	cfg.AssertProvides(t, f.Float64("servers", "alpha", "percent"), 8.5)
 	cfg.AssertProvides(t, f.Duration("servers", "alpha", "timeout"), time.Second*5)
+
+	_, err = f.Int("invalid").Provide(context.Background())
+	assert.ErrorIs(t, err, cfg.NoValueProvidedError)
 }
