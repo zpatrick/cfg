@@ -5,29 +5,28 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/cfg/providers/flags"
 )
 
-func ExampleFlag() {
+func ExampleNew() {
 	fs := flag.NewFlagSet("", flag.PanicOnError)
 	portFlag := fs.Int("port", 8000, "the port to listen on")
 
-	if err := fs.Parse([]string{"--port", "9090"}); err != nil {
+	if err := fs.Parse([]string{"--port", "9999"}); err != nil {
 		panic(err)
 	}
 
-	portProvider := cfg.Flag(portFlag, fs, "port")
+	portProvider := flags.New(fs, portFlag, "port")
 	port, err := portProvider.Provide(context.Background())
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("port is:", port)
-	// Output: port is: 9090
+	// Output: port is: 9999
 }
 
-func ExampleFlagWithDefault() {
+func ExampleNewWithDefault() {
 	fs := flag.NewFlagSet("", flag.PanicOnError)
 	portFlag := fs.Int("port", 8000, "the port to listen on")
 
@@ -35,7 +34,7 @@ func ExampleFlagWithDefault() {
 		panic(err)
 	}
 
-	portProvider := flags.FlagWithDefault(portFlag)
+	portProvider := flags.NewWithDefault(portFlag)
 	port, err := portProvider.Provide(context.Background())
 	if err != nil {
 		panic(err)
