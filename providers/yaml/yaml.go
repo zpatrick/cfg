@@ -1,16 +1,15 @@
 package yaml
 
 import (
-	"context"
 	"os"
 
-	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/providers/generic"
 	"gopkg.in/yaml.v3"
 )
 
 // TODO: comments
 type Provider struct {
-	root *yaml.Node
+	generic.Provider
 }
 
 func New(path string) (*Provider, error) {
@@ -19,25 +18,10 @@ func New(path string) (*Provider, error) {
 		return nil, err
 	}
 
-	var root yaml.Node
-	if err := yaml.Unmarshal(data, &root); err != nil {
+	var m map[string]any
+	if err := yaml.Unmarshal(data, &m); err != nil {
 		return nil, err
 	}
 
-	return &Provider{root: &root}, nil
+	return &Provider{generic.Provider(m)}, nil
 }
-
-func (p *Provider) Bool(keys ...string) cfg.Provider[bool] {
-	return Provide[bool](p, keys...)
-}
-
-func Provide[T any](p *Provider, keys ...string) cfg.Provider[T] {
-	return cfg.ProviderFunc[T](func(ctx context.Context) (out T, err error) {
-		r := p.root
-
-		print(r)
-		return out, nil
-	})
-}
-
-// unmarhsla; https://github.com/go-yaml/yaml/blob/v3.0.1/decode.go#L484

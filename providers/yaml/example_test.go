@@ -1,9 +1,13 @@
 package yaml_test
 
 import (
+	"context"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/providers/yaml"
 )
 
 type Config struct {
@@ -12,46 +16,46 @@ type Config struct {
 	ServerAddr *cfg.Setting[string]
 }
 
-// func Example() {
-// 	const data = `
-// timeout: 5s
-// server:
-//   port: 8080
-//   addr: localhost
-// `
+func Example() {
+	const data = `
+timeout: 5s
+server:
+  port: 8080
+  addr: localhost
+`
 
-// 	path, err := cfg.WriteTempFile("", data)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer os.Remove(path)
+	path, err := cfg.WriteTempFile("", data)
+	if err != nil {
+		panic(err)
+	}
+	defer os.Remove(path)
 
-// 	yamlFile, err := yaml.New(path)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+	yamlFile, err := yaml.New(path)
+	if err != nil {
+		panic(err)
+	}
 
-// 	c := &Config{
-// 		Timeout: &cfg.Setting[time.Duration]{
-// 			Provider: yamlFile.Duration("timeout"),
-// 		},
-// 		ServerPort: &cfg.Setting[int]{
-// 			Provider: yamlFile.Int("server", "port"),
-// 		},
-// 		ServerAddr: &cfg.Setting[string]{
-// 			Provider: yamlFile.String("server", "addr"),
-// 		},
-// 	}
+	c := &Config{
+		Timeout: &cfg.Setting[time.Duration]{
+			Provider: yamlFile.Duration("timeout"),
+		},
+		ServerPort: &cfg.Setting[int]{
+			Provider: yamlFile.Int("server", "port"),
+		},
+		ServerAddr: &cfg.Setting[string]{
+			Provider: yamlFile.String("server", "addr"),
+		},
+	}
 
-// 	if err := cfg.Load(context.Background(), c); err != nil {
-// 		panic(err)
-// 	}
+	if err := cfg.Load(context.Background(), c); err != nil {
+		panic(err)
+	}
 
-// 	fmt.Printf("Timeout: %s ServerPort: %d ServerAddr: %s",
-// 		c.Timeout.Val(),
-// 		c.ServerPort.Val(),
-// 		c.ServerAddr.Val(),
-// 	)
+	fmt.Printf("Timeout: %s ServerPort: %d ServerAddr: %s",
+		c.Timeout.Val(),
+		c.ServerPort.Val(),
+		c.ServerAddr.Val(),
+	)
 
-// 	// Output: Timeout: 5s ServerPort: 8080 ServerAddr: localhost
-// }
+	// Output: Timeout: 5s ServerPort: 8080 ServerAddr: localhost
+}

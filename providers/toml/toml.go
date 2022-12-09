@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	//"github.com/BurntSushi/toml"
 	"github.com/pelletier/go-toml"
 	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/cfg/providers/generic"
