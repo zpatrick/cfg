@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Loader is the interface implemented by types that can load setting values into themselves.
+// Loader is the interface implemented by types that can load values into themselves.
 type Loader interface {
 	Load(context.Context) error
 }
@@ -26,32 +26,150 @@ type Loader interface {
 func Load(ctx context.Context, c any) error {
 	val := reflect.Indirect(reflect.ValueOf(c))
 	if val.Type().Kind() != reflect.Struct {
-		return fmt.Errorf("parameter is not a struct")
+		return fmt.Errorf("parameter is not of type struct")
 	}
 
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		fieldName := val.Type().Field(i).Name
-
-		if !field.CanInterface() {
+	for _, e := range reflect.VisibleFields(val.Type()) {
+		if !e.IsExported() {
 			continue
 		}
 
-		setting, ok := field.Interface().(Loader)
+		field := val.FieldByIndex(e.Index)
+		loader, ok := checkIfLoader(field)
 		if ok {
-			if err := setting.Load(ctx); err != nil {
-				return errors.Wrapf(err, "failed to load field %s", fieldName)
+			if err := loader.Load(ctx); err != nil {
+				return errors.Wrapf(err, "failed to load field %s", e.Name)
 			}
 
 			continue
 		}
 
-		if field.Type().Kind() == reflect.Struct {
+		if reflect.Indirect(field).Kind() == reflect.Struct {
+			if field.Kind() != reflect.Ptr && field.CanAddr() {
+				field = field.Addr()
+			}
+
 			if err := Load(ctx, field.Interface()); err != nil {
-				return errors.Wrapf(err, "failed to load field %s", fieldName)
+				return errors.Wrapf(err, "failed to load field %s", e.Name)
 			}
 		}
 	}
 
 	return nil
 }
+
+func checkIfLoader(v reflect.Value) (Loader, bool) {
+	if v.CanInterface() {
+		loader, ok := v.Interface().(Loader)
+		if ok {
+			return loader, true
+		}
+	}
+
+	if v.CanAddr() {
+		return checkIfLoader(v.Addr())
+	}
+
+	return nil, false
+}
+
+// Are you a struct?
+// For each of your fields
+
+// func Load(ctx context.Context, c any) error {
+// 	val := reflect.Indirect(reflect.ValueOf(c))
+// 	if val.Type().Kind() != reflect.Struct {
+// 		return fmt.Errorf("parameter is not a struct")
+// 	}
+
+// 	for i := 0; i < val.NumField(); i++ {
+// 		field := val.Field(i)
+// 		fieldName := val.Type().Field(i).Name
+// 		print(fieldName)
+
+// 		if !field.CanInterface() {
+// 			continue
+// 		}
+
+// 		//field.Addr().MethodByName("Load").Call([]reflect.Value{reflect.ValueOf(ctx)})
+// 		//setting, ok := field.Interface().(Loader)
+// 		// TODO: check if can interface above
+// 		// if field.Kind() == reflect.Ptr {
+// 		// 	field = field.Elem()
+// 		// }
+// 		field = reflect.Indirect(field)
+
+// 		//v := field.Interface()
+
+// 		// TODO: check canAddr
+// 		// OOOOH SHIT OK THIS IS IT!
+// 		vptr := field.Addr()
+
+// 		//_, ok := field.Elem().Interface().(Loader)
+// 		_, ok := vptr.Interface().(Loader)
+// 		if ok {
+// 			// TODO: check output err
+// 			field.Addr().MethodByName("Load").Call([]reflect.Value{reflect.ValueOf(ctx)})
+
+// 			// if err := setting.Load(ctx); err != nil {
+// 			// 	return errors.Wrapf(err, "failed to load field %s", fieldName)
+// 			// }
+
+// 			continue
+// 		}
+
+// 		// if field.Type().Kind() == reflect.Struct {
+// 		// 	if err := Load(ctx, field.Interface()); err != nil {
+// 		// 		return errors.Wrapf(err, "failed to load field %s", fieldName)
+// 		// 	}
+// 		// }
+// 	}
+
+// 	return nil
+// }
+
+// func Load2(ctx context.Context, c any) error {
+// 	ptr := reflect.ValueOf(c)
+// 	if ptr.Kind() != reflect.Ptr {
+// 		return errors.New("c must be a pointer to a struct")
+// 	}
+
+// 	// reflect.Indirect(ptr)
+// 	val := ptr.Elem()
+// 	if val.Kind() != reflect.Struct {
+// 		return errors.New("c must be a pointer to a struct")
+// 	}
+
+// 	for _, field := range reflect.VisibleFields(val.Type()) {
+// 		if !field.IsExported() {
+// 			continue
+// 		}
+
+// 		var loader Loader
+// 		t := reflect.TypeOf(&loader).Elem()
+// 		if field.Type.Implements(reflect.TypeOf(t)) {
+// 			field := val.FieldByName(field.Name)
+// 			field.MethodByName("Loader").Call([]reflect.Value{reflect.ValueOf(ctx)})
+// 		}
+
+// 	}
+
+// 	// for i := 0; i < val.NumField(); i++ {
+// 	// 	field := val.Field(i)
+// 	// 	if !field.CanInterface() {
+// 	// 		continue
+// 	// 	}
+
+// 	// 	field.Kind()
+// 	// 	loader, ok := field.Interface().(Loader)
+// 	// 	if ok {
+// 	// 		if err := loader.Load(ctx); err != nil {
+// 	// 			return err
+// 	// 		}
+
+// 	// 		continue
+// 	// 	}
+// 	//}
+
+// 	return nil
+// }

@@ -11,9 +11,9 @@ import (
 )
 
 type Config struct {
-	Timeout    *cfg.Setting[time.Duration]
-	ServerPort *cfg.Setting[int64]
-	ServerAddr *cfg.Setting[string]
+	Timeout    cfg.Setting[time.Duration]
+	ServerPort cfg.Setting[int64]
+	ServerAddr cfg.Setting[string]
 }
 
 func Example() {
@@ -39,13 +39,13 @@ timeout = "5s"
 	}
 
 	c := &Config{
-		Timeout: &cfg.Setting[time.Duration]{
+		Timeout: cfg.Setting[time.Duration]{
 			Provider: tomlFile.Duration("timeout"),
 		},
-		ServerPort: &cfg.Setting[int64]{
+		ServerPort: cfg.Setting[int64]{
 			Provider: tomlFile.Int64("servers", "alpha", "port"),
 		},
-		ServerAddr: &cfg.Setting[string]{
+		ServerAddr: cfg.Setting[string]{
 			Provider: tomlFile.String("servers", "alpha", "addr"),
 		},
 	}

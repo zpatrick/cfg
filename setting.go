@@ -51,19 +51,18 @@ func (s *Setting[T]) Load(ctx context.Context) error {
 	return nil
 }
 
-// Val returns the value provided by s.Load.
-// This method will panic if s.Load has not been called or if the the method returned an error.
+// Val returns the value loaded into s using s.Load.
+// If s.Load has not been called, and s.Default is set, the default will be returned.
+// Otherwise, the zero value of T will be returned.
 func (s Setting[T]) Val() T {
-	return *s.val
-}
-
-// ValOK peforms the same logic as Val, but returns a boolean instead of panicing
-// if there is not a valid value to return.
-func (s Setting[T]) ValOK() (T, bool) {
-	if s.val == nil {
-		var t T
-		return t, false
+	if s.val != nil {
+		return *s.val
 	}
 
-	return *s.val, true
+	if s.Default != nil {
+		return *s.Default
+	}
+
+	var zero T
+	return zero
 }

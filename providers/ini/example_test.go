@@ -11,9 +11,9 @@ import (
 )
 
 type Config struct {
-	Timeout    *cfg.Setting[time.Duration]
-	ServerPort *cfg.Setting[int64]
-	ServerAddr *cfg.Setting[string]
+	Timeout    cfg.Setting[time.Duration]
+	ServerPort cfg.Setting[int64]
+	ServerAddr cfg.Setting[string]
 }
 
 func Example() {
@@ -37,13 +37,13 @@ addr = "localhost"
 	}
 
 	c := &Config{
-		Timeout: &cfg.Setting[time.Duration]{
+		Timeout: cfg.Setting[time.Duration]{
 			Provider: iniFile.Duration("", "timeout"),
 		},
-		ServerPort: &cfg.Setting[int64]{
+		ServerPort: cfg.Setting[int64]{
 			Provider: iniFile.Int64("server", "port"),
 		},
-		ServerAddr: &cfg.Setting[string]{
+		ServerAddr: cfg.Setting[string]{
 			Provider: iniFile.String("server", "addr"),
 		},
 	}

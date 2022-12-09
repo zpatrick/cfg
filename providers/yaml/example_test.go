@@ -11,9 +11,9 @@ import (
 )
 
 type Config struct {
-	Timeout    *cfg.Setting[time.Duration]
-	ServerPort *cfg.Setting[int]
-	ServerAddr *cfg.Setting[string]
+	Timeout    cfg.Setting[time.Duration]
+	ServerPort cfg.Setting[int]
+	ServerAddr cfg.Setting[string]
 }
 
 func Example() {
@@ -36,13 +36,13 @@ server:
 	}
 
 	c := &Config{
-		Timeout: &cfg.Setting[time.Duration]{
+		Timeout: cfg.Setting[time.Duration]{
 			Provider: yamlFile.Duration("timeout"),
 		},
-		ServerPort: &cfg.Setting[int]{
+		ServerPort: cfg.Setting[int]{
 			Provider: yamlFile.Int("server", "port"),
 		},
-		ServerAddr: &cfg.Setting[string]{
+		ServerAddr: cfg.Setting[string]{
 			Provider: yamlFile.String("server", "addr"),
 		},
 	}

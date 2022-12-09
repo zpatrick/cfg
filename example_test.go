@@ -12,10 +12,10 @@ import (
 )
 
 type Config struct {
-	ServerPort       *cfg.Setting[int]
-	ServerTimeout    *cfg.Setting[time.Duration]
-	DatabaseAddress  *cfg.Setting[string]
-	DatabaseUsername *cfg.Setting[string]
+	ServerPort       cfg.Setting[int]
+	ServerTimeout    cfg.Setting[time.Duration]
+	DatabaseAddress  cfg.Setting[string]
+	DatabaseUsername cfg.Setting[string]
 }
 
 func LoadConfig(ctx context.Context, path string) (*Config, error) {
@@ -25,14 +25,14 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 	}
 
 	c := &Config{
-		ServerPort: &cfg.Setting[int]{
+		ServerPort: cfg.Setting[int]{
 			Default: cfg.Pointer(8080),
 			Provider: cfg.MultiProvider[int]{
 				envvar.Newf("APP_SERVER_PORT", strconv.Atoi),
 				yamlFile.Int("server", "port"),
 			},
 		},
-		ServerTimeout: &cfg.Setting[time.Duration]{
+		ServerTimeout: cfg.Setting[time.Duration]{
 			Default:   cfg.Pointer(time.Second * 30),
 			Validator: cfg.Between(time.Second, time.Minute*5),
 			Provider: cfg.MultiProvider[time.Duration]{
@@ -40,14 +40,14 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 				yamlFile.Duration("server", "timeout"),
 			},
 		},
-		DatabaseAddress: &cfg.Setting[string]{
+		DatabaseAddress: cfg.Setting[string]{
 			Default: cfg.Pointer("localhost:3306"),
 			Provider: cfg.MultiProvider[string]{
 				envvar.New("APP_DATABASE_ADDR"),
 				yamlFile.String("db", "address"),
 			},
 		},
-		DatabaseUsername: &cfg.Setting[string]{
+		DatabaseUsername: cfg.Setting[string]{
 			Default:   cfg.Pointer("readonly"),
 			Validator: cfg.OneOf("readonly", "readwrite"),
 			Provider: cfg.MultiProvider[string]{
