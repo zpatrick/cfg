@@ -10,6 +10,7 @@ import (
 	"github.com/zpatrick/testx/assert"
 )
 
+
 type embedded struct {
 	E1 cfg.Setting[int]
 	E2 *cfg.Setting[int]
@@ -20,7 +21,7 @@ type nested struct {
 	N2 *cfg.Setting[int]
 }
 
-func TestLoad(t *testing.T) {
+func TestLoad(t *testing.T) {	
 	c := struct {
 		embedded
 		Nested    nested
@@ -63,3 +64,15 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, c.P1.Val(), 7)
 	assert.Equal(t, c.P2.Val(), 8)
 }
+
+
+
+
+behaviors tested = number of tests * behaviors per test 
+
+50
+5 * 10
+or 25 * 2
+
+maintenance cost is large, as number of tests goes up, so does maintenance cost
+if 
