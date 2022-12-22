@@ -1,32 +1,42 @@
 package cfg_test
 
-// type Environment string
+import (
+	"context"
+	"fmt"
+	"os"
 
-// const (
-// 	Development Environment = "development"
-// 	Staging     Environment = "staging"
-// 	Production  Environment = "production"
-// )
+	"github.com/zpatrick/cfg"
+)
 
-// func ExampleProvider_custom() {
-// 	env := cfg.Setting[Environment]{
-// 		Default:   cfg.Pointer(Development),
-// 		Validator: cfg.OneOf(Development, Staging, Production),
-// 		Provider: cfg.ProviderFunc[Environment](func(context.Context) (Environment, error) {
-// 			appEnv := os.Getenv("APP_ENV")
-// 			if appEnv == "" {
-// 				return "", cfg.NoValueProvidedError
-// 			}
+type Environment string
 
-// 			return Environment(appEnv), nil
-// 		}),
-// 	}
+const (
+	Development Environment = "development"
+	Staging     Environment = "staging"
+	Production  Environment = "production"
+)
 
-// 	os.Setenv("APP_ENV", "staging")
-// 	if err := env.Load(context.Background()); err != nil {
-// 		panic(err)
-// 	}
+func ExampleProvider_custom() {
+	var env Environment
+	schema := cfg.Schema[Environment]{
+		Dest:      &env,
+		Default:   cfg.Pointer(Development),
+		Validator: cfg.OneOf(Development, Staging, Production),
+		Provider: cfg.ProviderFunc[Environment](func(context.Context) (Environment, error) {
+			appEnv := os.Getenv("APP_ENV")
+			if appEnv == "" {
+				return "", cfg.NoValueProvidedError
+			}
 
-// 	fmt.Println(env.Val())
-// 	// Output: staging
-// }
+			return Environment(appEnv), nil
+		}),
+	}
+
+	os.Setenv("APP_ENV", "staging")
+	if err := schema.Load(context.Background()); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(env)
+	// Output: staging
+}
