@@ -20,6 +20,16 @@ type Loader interface {
 	Load(context.Context) error
 }
 
+func Load2(ctx context.Context, schemas map[string]Loader) error {
+	for name, schema := range schemas {
+		if err := schema.Load(ctx); err != nil {
+			return errors.Wrapf(err, "failed to load %s", name)
+		}
+	}
+
+	return nil
+}
+
 // Load takes a struct, c, and traverses the fields recursively.
 // If any field is of type Setting, the Load method will be called on that field.
 // Additionally, the Load method will be called on any field which implements the Loader interface.

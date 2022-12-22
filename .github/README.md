@@ -150,12 +150,8 @@ A custom Validator must satisfy the [Validator](https://pkg.go.dev/github.com/zp
 The simplest way to achieve this is by using the [ValidatorFunc](https://pkg.go.dev/github.com/zpatrick/cfg#ValidatorFunc) type.
 
 ```go
-import (
-  "net/mail"
-)
-
-var email = cfg.Setting[string]{
-	Default: func() string { return "foo@bar.com" },
+cfg.Setting[string]{
+	Default: cfg.Pointer("name@email.com"),
 	Validator: cfg.ValidatorFunc(func(addr string) error {
 		_, err := mail.ParseAddr(addr)
 		return err

@@ -17,7 +17,7 @@ const (
 )
 
 func ExampleProvider_custom() {
-	env := &cfg.Setting[Environment]{
+	env := cfg.Setting[Environment]{
 		Default:   cfg.Pointer(Development),
 		Validator: cfg.OneOf(Development, Staging, Production),
 		Provider: cfg.ProviderFunc[Environment](func(context.Context) (Environment, error) {
