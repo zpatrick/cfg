@@ -2,90 +2,97 @@ package cfg_test
 
 import (
 	"context"
-	"flag"
-	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/providers/envvar"
-	"github.com/zpatrick/cfg/providers/flags"
 	"github.com/zpatrick/testx/assert"
 )
 
-func ExampleSetting_validation() {
-	userName := &cfg.Setting[string]{
-		Validator: cfg.OneOf("admin", "guest"),
-		Provider:  cfg.StaticProvider("other"),
+func TestSchemaLoad_setsDestination(t *testing.T) {
+	var out int
+
+	port := cfg.Schema[int]{
+		Dest:     &out,
+		Provider: cfg.StaticProvider(8080),
 	}
 
-	err := userName.Load(context.Background())
-	fmt.Println(err)
-	// Output: validation failed: input other not contained in [admin guest]
+	assert.NilError(t, port.Load(context.Background()))
+	assert.Equal(t, out, 8080)
 }
 
-func ExampleSetting_default() {
-	port := &cfg.Setting[int]{
-		Default:  cfg.Pointer(8080),
-		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
-	}
+// func ExampleSchema_validation() {
+// 	userName := &cfg.Schema[string]{
+// 		Validator: cfg.OneOf("admin", "guest"),
+// 		Provider:  cfg.StaticProvider("other"),
+// 	}
 
-	port.Load(context.Background())
-	fmt.Println(port.Val())
-	// Output: 8080
-}
+// 	err := userName.Load(context.Background())
+// 	fmt.Println(err)
+// 	// Output: validation failed: input other not contained in [admin guest]
+// }
 
-func ExampleSetting_multiProvider() {
-	addrFlag := flag.String("addr", "localhost", "")
+// func ExampleSchema_default() {
+// 	port := &cfg.Schema[int]{
+// 		Default:  cfg.Pointer(8080),
+// 		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
+// 	}
 
-	addr := &cfg.Setting[string]{
-		Provider: cfg.MultiProvider[string]{
-			envvar.New("APP_ADDR"),
-			flags.NewWithDefault(addrFlag),
-		},
-	}
+// 	port.Load(context.Background())
+// 	fmt.Println(port.Val())
+// 	// Output: 8080
+// }
 
-	addr.Load(context.Background())
-	fmt.Println(addr.Val())
-	// Output: localhost
-}
+// func ExampleSchema_multiProvider() {
+// 	addrFlag := flag.String("addr", "localhost", "")
 
-// Setting.Load
-// returns error if provider not defined
-// returns value of Provide
-// returns NoValueProvidedErorr when no default
-// returns nil when NoValueProvided with default
+// 	addr := &cfg.Schema[string]{
+// 		Provider: cfg.MultiProvider[string]{
+// 			envvar.New("APP_ADDR"),
+// 			flags.NewWithDefault(addrFlag),
+// 		},
+// 	}
 
-func TestSettingLoad_returnsErrorIfProviderIsNil(t *testing.T) {
-	s := cfg.Setting[int]{}
-	assert.Error(t, s.Load(context.Background()))
-}
+// 	addr.Load(context.Background())
+// 	fmt.Println(addr.Val())
+// 	// Output: localhost
+// }
 
-func TestSettingLoad_returnsProviderValue(t *testing.T) {
-	s := cfg.Setting[int]{
-		Provider: cfg.ProviderFunc[int](func(ctx context.Context) (int, error) {
-			return 3, nil
-		}),
-	}
+// // Schema.Load
+// // returns error if provider not defined
+// // returns value of Provide
+// // returns NoValueProvidedErorr when no default
+// // returns nil when NoValueProvided with default
 
-	if err := s.Load(context.Background()); err != nil {
-		t.Fatal(err)
-	}
+// func TestSchemaLoad_returnsErrorIfProviderIsNil(t *testing.T) {
+// 	s := cfg.Schema[int]{}
+// 	assert.Error(t, s.Load(context.Background()))
+// }
 
-	assert.Equal(t, s.Val(), 3)
-}
+// func TestSchemaLoad_returnsProviderValue(t *testing.T) {
+// 	s := cfg.Schema[int]{
+// 		Provider: cfg.ProviderFunc[int](func(ctx context.Context) (int, error) {
+// 			return 3, nil
+// 		}),
+// 	}
 
-func TestSettingLoad_returnsDefaultIfProviderReturnsNoValueProvidedErr(t *testing.T) {
-	s := cfg.Setting[int]{
-		Default: cfg.Pointer(3),
-		Provider: cfg.ProviderFunc[int](func(ctx context.Context) (int, error) {
-			return 0, cfg.NoValueProvidedError
-		}),
-	}
+// 	if err := s.Load(context.Background()); err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	if err := s.Load(context.Background()); err != nil {
-		t.Fatal(err)
-	}
+// 	assert.Equal(t, s.Val(), 3)
+// }
 
-	assert.Equal(t, s.Val(), 3)
-}
+// func TestSchemaLoad_returnsDefaultIfProviderReturnsNoValueProvidedErr(t *testing.T) {
+// 	s := cfg.Schema[int]{
+// 		Default: cfg.Pointer(3),
+// 		Provider: cfg.ProviderFunc[int](func(ctx context.Context) (int, error) {
+// 			return 0, cfg.NoValueProvidedError
+// 		}),
+// 	}
+
+// 	if err := s.Load(context.Background()); err != nil {
+// 		t.Fatal(err)
+// 	}
+
+// 	assert.Equal(t, s.Val(), 3)
+// }

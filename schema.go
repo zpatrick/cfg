@@ -87,15 +87,13 @@ type Schema[T any] struct {
 	Default *T
 	// Validator is an optional field which ensures the value provided is valid.
 	Validator Validator[T]
-
-	val *T
 }
 
 // Get loads the value provided by s.Provider.
 // If s.Validator is set, it will be used to validate the provided value.
 // If no value is provided and s.Default is set, s.Default will be used.
 // If no value is provided and s.Default is not set, a NoValueProvidedError will be returned.
-func (s *Schema[T]) Load(ctx context.Context) error {
+func (s Schema[T]) Load(ctx context.Context) error {
 	if s.Dest == nil {
 		return errors.New("dest is nil")
 	}
@@ -123,6 +121,6 @@ func (s *Schema[T]) Load(ctx context.Context) error {
 		}
 	}
 
-	s.val = &val
+	*s.Dest = val
 	return nil
 }

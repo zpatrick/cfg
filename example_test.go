@@ -16,10 +16,10 @@ import (
 )
 
 type Config struct {
-	ServerPort       cfg.Setting[int]
-	ServerTimeout    cfg.Setting[time.Duration]
-	DatabaseAddress  cfg.Setting[string]
-	DatabaseUsername cfg.Setting[string]
+	ServerPort       int
+	ServerTimeout    time.Duration
+	DatabaseAddress  string
+	DatabaseUsername string
 }
 
 func LoadConfig(ctx context.Context, path string) (*Config, error) {
@@ -28,15 +28,18 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 		return nil, err
 	}
 
-	c := &Config{
-		ServerPort: cfg.Setting[int]{
+	var c Config
+	if err := cfg.Load2(ctx, map[string]cfg.Loader{
+		"server.port": cfg.Schema[int]{
+			Dest:    &c.ServerPort,
 			Default: cfg.Pointer(8080),
 			Provider: cfg.MultiProvider[int]{
 				envvar.Newf("APP_SERVER_PORT", strconv.Atoi),
 				yamlFile.Int("server", "port"),
 			},
 		},
-		ServerTimeout: cfg.Setting[time.Duration]{
+		"server.timeout": cfg.Schema[time.Duration]{
+			Dest:      &c.ServerTimeout,
 			Default:   cfg.Pointer(time.Second * 30),
 			Validator: cfg.Between(time.Second, time.Minute*5),
 			Provider: cfg.MultiProvider[time.Duration]{
@@ -44,14 +47,16 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 				yamlFile.Duration("server", "timeout"),
 			},
 		},
-		DatabaseAddress: cfg.Setting[string]{
+		"database.address": cfg.Schema[string]{
+			Dest:    &c.DatabaseAddress,
 			Default: cfg.Pointer("localhost:3306"),
 			Provider: cfg.MultiProvider[string]{
 				envvar.New("APP_DATABASE_ADDR"),
 				yamlFile.String("db", "address"),
 			},
 		},
-		DatabaseUsername: cfg.Setting[string]{
+		"database.username": cfg.Schema[string]{
+			Dest:      &c.DatabaseUsername,
 			Default:   cfg.Pointer("readonly"),
 			Validator: cfg.OneOf("readonly", "readwrite"),
 			Provider: cfg.MultiProvider[string]{
@@ -59,13 +64,11 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 				yamlFile.String("db", "username"),
 			},
 		},
-	}
-
-	if err := cfg.Load(ctx, c); err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	return c, nil
+	return &c, nil
 }
 
 func Example() {
@@ -76,8 +79,8 @@ func Example() {
 	}
 
 	mysqlConf := mysql.Config{
-		Addr: c.DatabaseAddress.Val(),
-		User: c.DatabaseUsername.Val(),
+		Addr: c.DatabaseAddress,
+		User: c.DatabaseUsername,
 	}
 
 	db, err := sql.Open("mysql", mysqlConf.FormatDSN())
@@ -86,9 +89,9 @@ func Example() {
 	}
 
 	svr := http.Server{
-		Addr:         fmt.Sprintf("0.0.0.0:%d", c.ServerPort.Val()),
-		ReadTimeout:  c.ServerTimeout.Val(),
-		WriteTimeout: c.ServerTimeout.Val(),
+		Addr:         fmt.Sprintf("0.0.0.0:%d", c.ServerPort),
+		ReadTimeout:  c.ServerTimeout,
+		WriteTimeout: c.ServerTimeout,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if err := db.PingContext(r.Context()); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
