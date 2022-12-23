@@ -6,9 +6,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// A Provider loads a configuration value from some predetermined source.
-// If no value is provided by the underlying source, the Provider must return
-// a NoValueProvidedError.
+// A Provider loads a configuration value from a predetermined source.
+// If no value is provided by the underlying source, the Provider must return a NoValueProvidedError.
 type Provider[T any] interface {
 	Provide(ctx context.Context) (T, error)
 }

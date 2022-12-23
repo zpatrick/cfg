@@ -2,14 +2,10 @@ package cfg_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"log"
-	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/cfg/providers/envvar"
 	"github.com/zpatrick/cfg/providers/yaml"
@@ -75,34 +71,8 @@ func Example() {
 	ctx := context.Background()
 	c, err := LoadConfig(ctx, "config.yaml")
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
-	mysqlConf := mysql.Config{
-		Addr: c.DatabaseAddress,
-		User: c.DatabaseUsername,
-	}
-
-	db, err := sql.Open("mysql", mysqlConf.FormatDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	svr := http.Server{
-		Addr:         fmt.Sprintf("0.0.0.0:%d", c.ServerPort),
-		ReadTimeout:  c.ServerTimeout,
-		WriteTimeout: c.ServerTimeout,
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if err := db.PingContext(r.Context()); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			w.WriteHeader(http.StatusOK)
-		}),
-	}
-
-	if err := svr.ListenAndServe(); err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println("config:", c)
 }

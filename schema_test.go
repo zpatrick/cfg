@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"testing"
 
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/providers/envvar"
 	"github.com/zpatrick/testx/assert"
 )
 
@@ -25,31 +23,6 @@ func ExampleSchema_validation() {
 	}
 
 	// Output: validation failed: input other not contained in [admin guest]
-}
-
-func ExampleSchema_multiProvider() {
-	var userName string
-	schema := cfg.Schema[string]{
-		Dest: &userName,
-		// Note that order matters when using MultiProvider:
-		// We first will use USERNAME_ALPHA if that envvar is set,
-		// falling back to using USERNAME_BRAVO if not.
-		Provider: cfg.MultiProvider[string]{
-			envvar.New("USERNAME_ALPHA"),
-			envvar.New("USERNAME_BRAVO"),
-		},
-	}
-
-	os.Setenv("USERNAME_ALPHA", "foo")
-	os.Setenv("USERNAME_BRAVO", "bar")
-
-	if err := schema.Load(context.Background()); err != nil {
-		panic(err)
-	}
-
-	fmt.Println(userName)
-
-	// Output: foo
 }
 
 func TestSchemaLoad_populatesDest(t *testing.T) {
@@ -126,4 +99,8 @@ func TestSchemaLoad_validationSuccess(t *testing.T) {
 
 	assert.NilError(t, port.Load(context.Background()))
 	assert.Equal(t, called, true)
+}
+
+func TestSchemaSatisfiesLoaderInterface(t *testing.T) {
+	var _ cfg.Loader = cfg.Schema[int]{}
 }

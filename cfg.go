@@ -18,9 +18,10 @@ type Loader interface {
 	Load(context.Context) error
 }
 
-func Load(ctx context.Context, schemas map[string]Loader) error {
-	for name, schema := range schemas {
-		if err := schema.Load(ctx); err != nil {
+// Load calls Load(ctx) for each Loader in loaders.
+func Load(ctx context.Context, loaders map[string]Loader) error {
+	for name, loader := range loaders {
+		if err := loader.Load(ctx); err != nil {
 			return errors.Wrapf(err, "failed to load %s", name)
 		}
 	}
@@ -28,7 +29,7 @@ func Load(ctx context.Context, schemas map[string]Loader) error {
 	return nil
 }
 
-// Pointer returns a pointer to t. This can be used to assign a Schema.Default in one line.
+// Pointer returns a pointer to t.
 func Pointer[T any](t T) *T {
 	return &t
 }
