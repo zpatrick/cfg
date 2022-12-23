@@ -1,4 +1,4 @@
-package cfg
+package cfgtest
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/testx/assert"
 )
 
@@ -25,7 +26,7 @@ func WriteTempFile(dir, data string) (string, error) {
 }
 
 // AssertProvides calls t.Fatal if p.Provide doesn't return expected.
-func AssertProvides[T comparable](t testing.TB, p Provider[T], expected T) {
+func AssertProvides[T comparable](t testing.TB, p cfg.Provider[T], expected T) {
 	out, err := p.Provide(context.Background())
 	assert.NilError(t, err)
 	assert.Equal(t, out, expected)

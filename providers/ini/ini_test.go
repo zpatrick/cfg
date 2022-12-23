@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/internal/cfgtest"
 	"github.com/zpatrick/cfg/providers/ini"
 	"github.com/zpatrick/testx/assert"
 )
@@ -22,19 +23,22 @@ percent = 8.5
 timeout = "5s"
 `
 
-	path, err := cfg.WriteTempFile(t.TempDir(), data)
+	path, err := cfgtest.WriteTempFile(t.TempDir(), data)
 	assert.NilError(t, err)
 	t.Cleanup(func() { os.Remove(path) })
 
 	f, err := ini.New(path)
 	assert.NilError(t, err)
 
-	cfg.AssertProvides(t, f.String("", "root"), "hello")
-	cfg.AssertProvides(t, f.Bool("server", "enabled"), true)
-	cfg.AssertProvides(t, f.Int64("server", "port"), 8080)
-	cfg.AssertProvides(t, f.Float64("server", "percent"), 8.5)
-	cfg.AssertProvides(t, f.Duration("server", "timeout"), time.Second*5)
+	cfgtest.AssertProvides(t, f.String("", "root"), "hello")
+	cfgtest.AssertProvides(t, f.Bool("server", "enabled"), true)
+	cfgtest.AssertProvides(t, f.Int64("server", "port"), 8080)
+	cfgtest.AssertProvides(t, f.Float64("server", "percent"), 8.5)
+	cfgtest.AssertProvides(t, f.Duration("server", "timeout"), time.Second*5)
 
-	_, err = f.Int("invalid", "key").Provide(context.Background())
+	_, err = f.Int("invalid", "port").Provide(context.Background())
+	assert.ErrorIs(t, err, cfg.NoValueProvidedError)
+
+	_, err = f.Int("server", "invalid").Provide(context.Background())
 	assert.ErrorIs(t, err, cfg.NoValueProvidedError)
 }
