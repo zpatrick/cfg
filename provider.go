@@ -26,7 +26,6 @@ type MultiProvider[T any] []Provider[T]
 
 // Provide iterates through each provider in m and returns the first value given by a provider.
 // If a provider returns a NoValueProvidedError, the iteration continues.
-// If a provider returns any other error type, that error is returned.
 // If no providers return a value, a NoValueProvidedError is returned.
 func (m MultiProvider[T]) Provide(ctx context.Context) (T, error) {
 	var t T

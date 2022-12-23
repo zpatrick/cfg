@@ -2,15 +2,58 @@ package cfg_test
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"os"
 	"testing"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/providers/envvar"
 	"github.com/zpatrick/testx/assert"
 )
 
-func TestSchemaLoad_setsDestination(t *testing.T) {
-	var out int
+func ExampleSchema_validation() {
+	var userName string
+	schema := cfg.Schema[string]{
+		Dest:      &userName,
+		Validator: cfg.OneOf("admin", "guest"),
+		Provider:  cfg.StaticProvider("other"),
+	}
 
+	if err := schema.Load(context.Background()); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output: validation failed: input other not contained in [admin guest]
+}
+
+func ExampleSchema_multiProvider() {
+	var userName string
+	schema := cfg.Schema[string]{
+		Dest: &userName,
+		// Note that order matters when using MultiProvider:
+		// We first will use USERNAME_ALPHA if that envvar is set,
+		// falling back to using USERNAME_BRAVO if not.
+		Provider: cfg.MultiProvider[string]{
+			envvar.New("USERNAME_ALPHA"),
+			envvar.New("USERNAME_BRAVO"),
+		},
+	}
+
+	os.Setenv("USERNAME_ALPHA", "foo")
+	os.Setenv("USERNAME_BRAVO", "bar")
+
+	if err := schema.Load(context.Background()); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(userName)
+
+	// Output: foo
+}
+
+func TestSchemaLoad_populatesDest(t *testing.T) {
+	var out int
 	port := cfg.Schema[int]{
 		Dest:     &out,
 		Provider: cfg.StaticProvider(8080),
@@ -20,79 +63,67 @@ func TestSchemaLoad_setsDestination(t *testing.T) {
 	assert.Equal(t, out, 8080)
 }
 
-// func ExampleSchema_validation() {
-// 	userName := &cfg.Schema[string]{
-// 		Validator: cfg.OneOf("admin", "guest"),
-// 		Provider:  cfg.StaticProvider("other"),
-// 	}
+func TestSchemaLoad_returnsUnhandledProviderError(t *testing.T) {
+	var out int
+	port := cfg.Schema[int]{
+		Dest:    &out,
+		Default: cfg.Pointer(8080),
+		Provider: cfg.ProviderFunc[int](func(context.Context) (int, error) {
+			return 0, io.EOF
+		}),
+	}
 
-// 	err := userName.Load(context.Background())
-// 	fmt.Println(err)
-// 	// Output: validation failed: input other not contained in [admin guest]
-// }
+	assert.ErrorIs(t, port.Load(context.Background()), io.EOF)
+}
 
-// func ExampleSchema_default() {
-// 	port := &cfg.Schema[int]{
-// 		Default:  cfg.Pointer(8080),
-// 		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
-// 	}
+func TestSchemaLoad_usesDefaultWhenHandlingNoValueProvidedError(t *testing.T) {
+	var out int
+	port := cfg.Schema[int]{
+		Dest:    &out,
+		Default: cfg.Pointer(8080),
+		Provider: cfg.ProviderFunc[int](func(context.Context) (int, error) {
+			return 0, cfg.NoValueProvidedError
+		}),
+	}
 
-// 	port.Load(context.Background())
-// 	fmt.Println(port.Val())
-// 	// Output: 8080
-// }
+	assert.NilError(t, port.Load(context.Background()))
+	assert.Equal(t, out, 8080)
+}
 
-// func ExampleSchema_multiProvider() {
-// 	addrFlag := flag.String("addr", "localhost", "")
+func TestSchemaLoad_returnsValidationError(t *testing.T) {
+	var (
+		out    int
+		called bool
+	)
 
-// 	addr := &cfg.Schema[string]{
-// 		Provider: cfg.MultiProvider[string]{
-// 			envvar.New("APP_ADDR"),
-// 			flags.NewWithDefault(addrFlag),
-// 		},
-// 	}
+	port := cfg.Schema[int]{
+		Dest:     &out,
+		Provider: cfg.StaticProvider(8080),
+		Validator: cfg.ValidatorFunc[int](func(i int) error {
+			called = true
+			return io.EOF
+		}),
+	}
 
-// 	addr.Load(context.Background())
-// 	fmt.Println(addr.Val())
-// 	// Output: localhost
-// }
+	assert.ErrorIs(t, port.Load(context.Background()), io.EOF)
+	assert.Equal(t, called, true)
+}
 
-// // Schema.Load
-// // returns error if provider not defined
-// // returns value of Provide
-// // returns NoValueProvidedErorr when no default
-// // returns nil when NoValueProvided with default
+func TestSchemaLoad_validationSuccess(t *testing.T) {
+	var (
+		out    int
+		called bool
+	)
 
-// func TestSchemaLoad_returnsErrorIfProviderIsNil(t *testing.T) {
-// 	s := cfg.Schema[int]{}
-// 	assert.Error(t, s.Load(context.Background()))
-// }
+	port := cfg.Schema[int]{
+		Dest:     &out,
+		Provider: cfg.StaticProvider(8080),
+		Validator: cfg.ValidatorFunc[int](func(i int) error {
+			called = true
+			return nil
+		}),
+	}
 
-// func TestSchemaLoad_returnsProviderValue(t *testing.T) {
-// 	s := cfg.Schema[int]{
-// 		Provider: cfg.ProviderFunc[int](func(ctx context.Context) (int, error) {
-// 			return 3, nil
-// 		}),
-// 	}
-
-// 	if err := s.Load(context.Background()); err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	assert.Equal(t, s.Val(), 3)
-// }
-
-// func TestSchemaLoad_returnsDefaultIfProviderReturnsNoValueProvidedErr(t *testing.T) {
-// 	s := cfg.Schema[int]{
-// 		Default: cfg.Pointer(3),
-// 		Provider: cfg.ProviderFunc[int](func(ctx context.Context) (int, error) {
-// 			return 0, cfg.NoValueProvidedError
-// 		}),
-// 	}
-
-// 	if err := s.Load(context.Background()); err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	assert.Equal(t, s.Val(), 3)
-// }
+	assert.NilError(t, port.Load(context.Background()))
+	assert.Equal(t, called, true)
+}

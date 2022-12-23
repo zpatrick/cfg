@@ -27,3 +27,8 @@ func Load(ctx context.Context, schemas map[string]Loader) error {
 
 	return nil
 }
+
+// Pointer returns a pointer to t. This can be used to assign a Schema.Default in one line.
+func Pointer[T any](t T) *T {
+	return &t
+}
