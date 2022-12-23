@@ -13,27 +13,35 @@ import (
 )
 
 func ExampleNew() {
-	os.Setenv("APP_ADDR", "localhost")
-
-	addr := &cfg.Setting[string]{
+	var addr string
+	schema := &cfg.Schema[string]{
+		Dest:     &addr,
 		Provider: envvar.New("APP_ADDR"),
 	}
 
-	addr.Load(context.Background())
-	fmt.Println(addr.Val())
+	os.Setenv("APP_ADDR", "localhost")
+	if err := schema.Load(context.Background()); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(addr)
 	// Output: localhost
 }
 
 func ExampleNewf() {
-	os.Setenv("APP_PORT", "8080")
-
-	port := &cfg.Setting[int]{
+	var port int
+	schema := &cfg.Schema[int]{
+		Dest:     &port,
 		Provider: envvar.Newf("APP_PORT", strconv.Atoi),
 	}
 
-	port.Load(context.Background())
-	fmt.Println(port.Val())
-	// Output: 8080
+	os.Setenv("APP_PORT", "9090")
+	if err := schema.Load(context.Background()); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(port)
+	// Output: 9090
 }
 
 func TestNew_returnsProperValue(t *testing.T) {

@@ -26,11 +26,11 @@ type provider[T any] struct {
 	decode func(string) (T, error)
 }
 
-func (e *provider[T]) Provide(ctx context.Context) (out T, err error) {
-	val := os.Getenv(e.key)
+func (p *provider[T]) Provide(ctx context.Context) (out T, err error) {
+	val := os.Getenv(p.key)
 	if val == "" {
 		return out, cfg.NoValueProvidedError
 	}
 
-	return e.decode(val)
+	return p.decode(val)
 }
