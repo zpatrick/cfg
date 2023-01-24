@@ -2,20 +2,20 @@
 
 [![Go Doc](https://godoc.org/github.com/zpatrick/cfg?status.svg)](https://godoc.org/github.com/zpatrick/cfg)
 
-The cfg package is written to house common configuration features used by microservice applications.
-This includes:
+This package is designed to house a common set of configuration-related features & patterns for teams working with microservice applications. These designs include:
 
-- Supporting multiple sources of configuration.
-- Default values and validation for specific settings.
+- Support for multiple sources of configuration.
+- Providing default values and validation logic for specific settings.
+- Support access patterns which encourage decoupling configuration logic from the rest of the application. 
 
 ## Usage
 
 ```go
 type Config struct {
-	ServerPort       cfg.Setting[int]
-	ServerTimeout    cfg.Setting[time.Duration]
-	DatabaseAddr     cfg.Setting[string]
-	DatabaseUsername cfg.Setting[string]
+	ServerPort       int
+	ServerTimeout    time.Duration
+	DatabaseAddress  string
+	DatabaseUsername string
 }
 
 func LoadConfig(ctx context.Context, path string) (*Config, error) {
@@ -24,15 +24,18 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 		return nil, err
 	}
 
-	c := &Config{
-		ServerPort: cfg.Setting[int]{
+	var c Config
+	if err := cfg.Load(ctx, map[string]cfg.Loader{
+		"server.port": cfg.Schema[int]{
+			Dest:    &c.ServerPort,
 			Default: cfg.Addr(8080),
 			Provider: cfg.MultiProvider[int]{
 				envvar.Newf("APP_SERVER_PORT", strconv.Atoi),
 				yamlFile.Int("server", "port"),
 			},
 		},
-		ServerTimeout: cfg.Setting[time.Duration]{
+		"server.timeout": cfg.Schema[time.Duration]{
+			Dest:      &c.ServerTimeout,
 			Default:   cfg.Addr(time.Second * 30),
 			Validator: cfg.Between(time.Second, time.Minute*5),
 			Provider: cfg.MultiProvider[time.Duration]{
@@ -40,14 +43,16 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 				yamlFile.Duration("server", "timeout"),
 			},
 		},
-		DatabaseAddr: cfg.Setting[string]{
+		"database.address": cfg.Schema[string]{
+			Dest:    &c.DatabaseAddress,
 			Default: cfg.Addr("localhost:3306"),
 			Provider: cfg.MultiProvider[string]{
 				envvar.New("APP_DATABASE_ADDR"),
-				yamlFile.String("db", "addr"),
+				yamlFile.String("db", "address"),
 			},
 		},
-		DatabaseUsername: cfg.Setting[string]{
+		"database.username": cfg.Schema[string]{
+			Dest:      &c.DatabaseUsername,
 			Default:   cfg.Addr("readonly"),
 			Validator: cfg.OneOf("readonly", "readwrite"),
 			Provider: cfg.MultiProvider[string]{
@@ -55,9 +60,7 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 				yamlFile.String("db", "username"),
 			},
 		},
-	}
-
-	if err := cfg.Load(ctx, c); err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
@@ -71,14 +74,14 @@ func main() {
 	}
 
 	svr := http.Server{
-		Addr: fmt.Sprintf("0.0.0.0:%d", c.ServerPort.Val())
-		ReadTimeout: c.ServerTimeout.Val(),
-		WriteTimeout: c.ServerTimeout.Val(),
+		Addr: fmt.Sprintf("0.0.0.0:%d", c.ServerPort),
+		ReadTimeout: c.ServerTimeout,
+		WriteTimeout: c.ServerTimeout,
 	}
 
 	db := mysql.Config{
-		Addr: c.DBAddr.Val(),
-		User: c.DBUser.Val()
+		Addr: c.DBAddr,
+		User: c.DBUser,
 	}
 
 	run(svr, db)
