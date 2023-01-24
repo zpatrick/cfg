@@ -9,66 +9,88 @@ This includes:
 - Default values and validation for specific settings.
 
 ## Usage
-_Click [here](https://github.com/zpatrick/cfg/tree/main/example) for a fully working example._
 
 ```go
-package main
+type Config struct {
+	ServerPort       cfg.Setting[int]
+	ServerTimeout    cfg.Setting[time.Duration]
+	DatabaseAddr     cfg.Setting[string]
+	DatabaseUsername cfg.Setting[string]
+}
 
-import (
-	"context"
-	"fmt"
-	"log"
-	"net/http"
-	"strconv"
-	"time"
+func LoadConfig(ctx context.Context, path string) (*Config, error) {
+	yamlFile, err := yaml.New(path)
+	if err != nil {
+		return nil, err
+	}
 
-	"github.com/zpatrick/cfg"
-)
+	c := &Config{
+		ServerPort: cfg.Setting[int]{
+			Default: cfg.Pointer(8080),
+			Provider: cfg.MultiProvider[int]{
+				envvar.Newf("APP_SERVER_PORT", strconv.Atoi),
+				yamlFile.Int("server", "port"),
+			},
+		},
+		ServerTimeout: cfg.Setting[time.Duration]{
+			Default:   cfg.Pointer(time.Second * 30),
+			Validator: cfg.Between(time.Second, time.Minute*5),
+			Provider: cfg.MultiProvider[time.Duration]{
+				envvar.Newf("APP_SERVER_TIMEOUT", time.ParseDuration),
+				yamlFile.Duration("server", "timeout"),
+			},
+		},
+		DatabaseAddr: cfg.Setting[string]{
+			Default: cfg.Pointer("localhost:3306"),
+			Provider: cfg.MultiProvider[string]{
+				envvar.New("APP_DATABASE_ADDR"),
+				yamlFile.String("db", "addr"),
+			},
+		},
+		DatabaseUsername: cfg.Setting[string]{
+			Default:   cfg.Pointer("readonly"),
+			Validator: cfg.OneOf("readonly", "readwrite"),
+			Provider: cfg.MultiProvider[string]{
+				envvar.New("APP_DATABASE_USERNAME"),
+				yamlFile.String("db", "username"),
+			},
+		},
+	}
+
+	if err := cfg.Load(ctx, c); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
 
 func main() {
-	iniFile, err := cfg.INIFile("config.ini")
+	c, err := LoadConfig(context.Background(), "config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	port := cfg.Setting[int]{
-		Default: func() int { return 8080 },
-		Providers: []cfg.Provider[int]{
-			cfg.EnvVar("APP_SERVER_PORT", strconv.Atoi),
-			iniFile.Int("server", "port"),
-		},
-	}
-
-	timeout := cfg.Setting[time.Duration]{
-		Validator: cfg.Between(time.Second, time.Minute*2),
-		Providers: []cfg.Provider[time.Duration]{
-			cfg.EnvVar("APP_SERVER_TIMEOUT", time.ParseDuration),
-			iniFile.Duration("server", "timeout"),
-		},
-	}
-
-	ctx := context.Background()
 	svr := http.Server{
-		ReadTimeout:  timeout.MustGet(ctx),
-		WriteTimeout: timeout.MustGet(ctx),
-		IdleTimeout:  timeout.MustGet(ctx),
-		Addr:         fmt.Sprintf(":%d", port.MustGet(ctx)),
-		Handler:      http.NotFoundHandler(),
+		Addr: fmt.Sprintf("0.0.0.0:%d", c.ServerPort.Val())
+		ReadTimeout: c.ServerTimeout.Val(),
+		WriteTimeout: c.ServerTimeout.Val(),
 	}
 
-	log.Println("listening on", svr.Addr)
-	log.Fatal(svr.ListenAndServe())
+	db := mysql.Config{
+		Addr: c.DBAddr.Val(),
+		User: c.DBUser.Val()
+	}
+
+	run(svr, db)
 }
 ```
 
-TODO: Note how []Providers finds the first value found in the list
 
 # Built in Providers
 
 - [Environment Variables](https://pkg.go.dev/github.com/zpatrick/cfg#EnvVar)
 - [Flags](https://pkg.go.dev/github.com/zpatrick/cfg#Flag)
 - [INI Files](https://pkg.go.dev/github.com/zpatrick/cfg#INIFile)
-- [JSON Files](https://pkg.go.dev/github.com/zpatrick/cfg#JSONFile)
 - [TOML Files](https://pkg.go.dev/github.com/zpatrick/cfg#TOMLFile)
 - [YAML Files](https://pkg.go.dev/github.com/zpatrick/cfg#YAMLFile)
 
@@ -81,6 +103,7 @@ The built in validators are:
 - [OneOf](https://pkg.go.dev/github.com/zpatrick/cfg#OneOf) - Ensures a given value is one of the specified parameters.
 - [Or](https://pkg.go.dev/github.com/zpatrick/cfg#Or) - Combines multiple Validators, ensures at least one passes.
 - [And](https://pkg.go.dev/github.com/zpatrick/cfg#And) - Combines multiple Validators, ensures all pass.
+- [Not](https://pkg.go.dev/github.com/zpatrick/cfg#Not) - Ensures a given validator does not pass.
 
 # Advanced
 
@@ -92,8 +115,8 @@ import (
 )
 
 // Create a helper function which wraps the underlying type.
-func provideMailAddress(provider cfg.Provider[string]) cfg.Provider[*mail.Address] {
-	return cfg.ProviderFunc[*mail.Address](func(ctx context.Context) (*mail.Address, error) {
+func provideMailAddr(provider cfg.Provider[string]) cfg.Provider[*mail.Addr] {
+	return cfg.ProviderFunc[*mail.Addr](func(ctx context.Context) (*mail.Addr, error) {
 		// Get the underlying value from the given provider.
 		raw, err := provider.Provide(ctx)
 		if err != nil {
@@ -101,7 +124,7 @@ func provideMailAddress(provider cfg.Provider[string]) cfg.Provider[*mail.Addres
 		}
 
 		// Convert the underlying.
-		return mail.ParseAddress(raw)
+		return mail.ParseAddr(raw)
 	})
 }
 
@@ -112,9 +135,9 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	email := cfg.Setting[*mail.Address]{
-		Providers: []cfg.Provider[*mail.Address]{
-			provideMailAddress(yamlFile.String("email")),
+	email := cfg.Setting[*mail.Addr]{
+		Providers: []cfg.Provider[*mail.Addr]{
+			provideMailAddr(yamlFile.String("email")),
 		},
 	}
 
@@ -127,14 +150,10 @@ A custom Validator must satisfy the [Validator](https://pkg.go.dev/github.com/zp
 The simplest way to achieve this is by using the [ValidatorFunc](https://pkg.go.dev/github.com/zpatrick/cfg#ValidatorFunc) type.
 
 ```go
-import (
-  "net/mail"
-)
-
-var email = cfg.Setting[string]{
-	Default: func() string { return "foo@bar.com" },
+cfg.Setting[string]{
+	Default: cfg.Pointer("name@email.com"),
 	Validator: cfg.ValidatorFunc(func(addr string) error {
-		_, err := mail.ParseAddress(addr)
+		_, err := mail.ParseAddr(addr)
 		return err
 	}),
 }

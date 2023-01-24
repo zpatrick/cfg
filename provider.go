@@ -6,9 +6,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// A Provider loads a configuration value from some predetermined source.
-// If no value is provided by the underlying source, the Provider must return
-// a NoValueProvidedError.
+// A Provider loads a configuration value from a predetermined source.
+// If no value is provided by the underlying source, the Provider must return a NoValueProvidedError.
 type Provider[T any] interface {
 	Provide(ctx context.Context) (T, error)
 }
@@ -26,7 +25,6 @@ type MultiProvider[T any] []Provider[T]
 
 // Provide iterates through each provider in m and returns the first value given by a provider.
 // If a provider returns a NoValueProvidedError, the iteration continues.
-// If a provider returns any other error type, that error is returned.
 // If no providers return a value, a NoValueProvidedError is returned.
 func (m MultiProvider[T]) Provide(ctx context.Context) (T, error) {
 	var t T
