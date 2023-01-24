@@ -20,7 +20,7 @@ func ExampleProvider_custom() {
 	var env Environment
 	schema := cfg.Schema[Environment]{
 		Dest:      &env,
-		Default:   cfg.Pointer(Development),
+		Default:   cfg.Addr(Development),
 		Validator: cfg.OneOf(Development, Staging, Production),
 		Provider: cfg.ProviderFunc[Environment](func(context.Context) (Environment, error) {
 			appEnv := os.Getenv("APP_ENV")

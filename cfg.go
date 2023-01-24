@@ -29,7 +29,7 @@ func Load(ctx context.Context, loaders map[string]Loader) error {
 	return nil
 }
 
-// Pointer returns a pointer to t.
-func Pointer[T any](t T) *T {
+// Addr returns the address of t.
+func Addr[T any](t T) *T {
 	return &t
 }
