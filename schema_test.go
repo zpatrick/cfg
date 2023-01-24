@@ -40,7 +40,7 @@ func TestSchemaLoad_returnsUnhandledProviderError(t *testing.T) {
 	var out int
 	port := cfg.Schema[int]{
 		Dest:    &out,
-		Default: cfg.Pointer(8080),
+		Default: cfg.Addr(8080),
 		Provider: cfg.ProviderFunc[int](func(context.Context) (int, error) {
 			return 0, io.EOF
 		}),
@@ -53,7 +53,7 @@ func TestSchemaLoad_usesDefaultWhenHandlingNoValueProvidedError(t *testing.T) {
 	var out int
 	port := cfg.Schema[int]{
 		Dest:    &out,
-		Default: cfg.Pointer(8080),
+		Default: cfg.Addr(8080),
 		Provider: cfg.ProviderFunc[int](func(context.Context) (int, error) {
 			return 0, cfg.NoValueProvidedError
 		}),

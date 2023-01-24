@@ -26,14 +26,14 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 
 	c := &Config{
 		ServerPort: cfg.Setting[int]{
-			Default: cfg.Pointer(8080),
+			Default: cfg.Addr(8080),
 			Provider: cfg.MultiProvider[int]{
 				envvar.Newf("APP_SERVER_PORT", strconv.Atoi),
 				yamlFile.Int("server", "port"),
 			},
 		},
 		ServerTimeout: cfg.Setting[time.Duration]{
-			Default:   cfg.Pointer(time.Second * 30),
+			Default:   cfg.Addr(time.Second * 30),
 			Validator: cfg.Between(time.Second, time.Minute*5),
 			Provider: cfg.MultiProvider[time.Duration]{
 				envvar.Newf("APP_SERVER_TIMEOUT", time.ParseDuration),
@@ -41,14 +41,14 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 			},
 		},
 		DatabaseAddr: cfg.Setting[string]{
-			Default: cfg.Pointer("localhost:3306"),
+			Default: cfg.Addr("localhost:3306"),
 			Provider: cfg.MultiProvider[string]{
 				envvar.New("APP_DATABASE_ADDR"),
 				yamlFile.String("db", "addr"),
 			},
 		},
 		DatabaseUsername: cfg.Setting[string]{
-			Default:   cfg.Pointer("readonly"),
+			Default:   cfg.Addr("readonly"),
 			Validator: cfg.OneOf("readonly", "readwrite"),
 			Provider: cfg.MultiProvider[string]{
 				envvar.New("APP_DATABASE_USERNAME"),
@@ -151,7 +151,7 @@ The simplest way to achieve this is by using the [ValidatorFunc](https://pkg.go.
 
 ```go
 cfg.Setting[string]{
-	Default: cfg.Pointer("name@email.com"),
+	Default: cfg.Addr("name@email.com"),
 	Validator: cfg.ValidatorFunc(func(addr string) error {
 		_, err := mail.ParseAddr(addr)
 		return err
