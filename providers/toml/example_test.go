@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/internal/cfgtest"
 	"github.com/zpatrick/cfg/providers/toml"
 )
 
 type Config struct {
-	Timeout    cfg.Setting[time.Duration]
-	ServerPort cfg.Setting[int64]
-	ServerAddr cfg.Setting[string]
+	Timeout    time.Duration
+	ServerPort int64
+	ServerAddr string
 }
 
 func Example() {
@@ -27,7 +28,7 @@ timeout = "5s"
 	addr = "localhost"
 `
 
-	path, err := cfg.WriteTempFile("", data)
+	path, err := cfgtest.WriteTempFile("", data)
 	if err != nil {
 		panic(err)
 	}
@@ -38,26 +39,28 @@ timeout = "5s"
 		panic(err)
 	}
 
-	c := &Config{
-		Timeout: cfg.Setting[time.Duration]{
+	var c Config
+	if err := cfg.Load(context.Background(), map[string]cfg.Loader{
+		"timeout": cfg.Schema[time.Duration]{
+			Dest:     &c.Timeout,
 			Provider: tomlFile.Duration("timeout"),
 		},
-		ServerPort: cfg.Setting[int64]{
+		"server port": cfg.Schema[int64]{
+			Dest:     &c.ServerPort,
 			Provider: tomlFile.Int64("servers", "alpha", "port"),
 		},
-		ServerAddr: cfg.Setting[string]{
+		"server addr": cfg.Schema[string]{
+			Dest:     &c.ServerAddr,
 			Provider: tomlFile.String("servers", "alpha", "addr"),
 		},
-	}
-
-	if err := cfg.Load(context.Background(), c); err != nil {
+	}); err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("Timeout: %s ServerPort: %d ServerAddr: %s",
-		c.Timeout.Val(),
-		c.ServerPort.Val(),
-		c.ServerAddr.Val(),
+		c.Timeout,
+		c.ServerPort,
+		c.ServerAddr,
 	)
 
 	// Output: Timeout: 5s ServerPort: 8080 ServerAddr: localhost

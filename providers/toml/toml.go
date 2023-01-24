@@ -10,7 +10,6 @@ import (
 	"github.com/zpatrick/cfg/providers/generic"
 )
 
-// TODO: comments
 type Provider struct {
 	tree *toml.Tree
 }
