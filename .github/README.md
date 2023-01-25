@@ -1,6 +1,7 @@
 # CFG
 
 [![Go Doc](https://godoc.org/github.com/zpatrick/cfg?status.svg)](https://godoc.org/github.com/zpatrick/cfg)
+[![Build Status](https://github.com/zpatrick/cfg/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/zpatrick/cfg/actions/workflows/tests.yaml?query=branch%3Amain)
 
 This package is designed to house a common set of configuration-related features & patterns for teams working with microservice applications. These designs include:
 
