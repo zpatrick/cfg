@@ -1,6 +1,9 @@
 name: Go
 
 on:
+  push:
+    branches: ['*']
+    tags: ['v*']
   pull_request:
     branches: [ main ]
 
