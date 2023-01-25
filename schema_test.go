@@ -100,7 +100,3 @@ func TestSchemaLoad_validationSuccess(t *testing.T) {
 	assert.NilError(t, port.Load(context.Background()))
 	assert.Equal(t, called, true)
 }
-
-func TestSchemaSatisfiesLoaderInterface(t *testing.T) {
-	var _ cfg.Loader = cfg.Schema[int]{}
-}

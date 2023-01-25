@@ -40,7 +40,7 @@ timeout = "5s"
 	}
 
 	var c Config
-	if err := cfg.Load(context.Background(), map[string]cfg.Loader{
+	if err := cfg.Load(context.Background(), cfg.Schemas{
 		"timeout": cfg.Schema[time.Duration]{
 			Dest:     &c.Timeout,
 			Provider: tomlFile.Duration("timeout"),

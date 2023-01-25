@@ -10,7 +10,7 @@ import (
 )
 
 func TestLoader_includesKeyInErrorMessage(t *testing.T) {
-	err := cfg.Load(context.Background(), map[string]cfg.Loader{
+	err := cfg.Load(context.Background(), cfg.Schemas{
 		"foo": cfg.Schema[int]{},
 	})
 

@@ -13,15 +13,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Loader is the interface implemented by types that can load values into themselves.
-type Loader interface {
-	Load(context.Context) error
-}
-
-// Load calls Load(ctx) for each Loader in loaders.
-func Load(ctx context.Context, loaders map[string]Loader) error {
-	for name, loader := range loaders {
-		if err := loader.Load(ctx); err != nil {
+// Load calls Load(ctx) for each schema in schemas.
+func Load(ctx context.Context, schemas Schemas) error {
+	for name, schema := range schemas {
+		if err := schema.Load(ctx); err != nil {
 			return errors.Wrapf(err, "failed to load %s", name)
 		}
 	}

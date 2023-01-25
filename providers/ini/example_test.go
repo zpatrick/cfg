@@ -38,7 +38,7 @@ addr = "localhost"
 	}
 
 	var c Config
-	if err := cfg.Load(context.Background(), map[string]cfg.Loader{
+	if err := cfg.Load(context.Background(), cfg.Schemas{
 		"timeout": cfg.Schema[time.Duration]{
 			Dest:     &c.Timeout,
 			Provider: iniFile.Duration("", "timeout"),

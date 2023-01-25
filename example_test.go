@@ -25,7 +25,7 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 	}
 
 	var c Config
-	if err := cfg.Load(ctx, map[string]cfg.Loader{
+	if err := cfg.Load(ctx, cfg.Schemas{
 		"server.port": cfg.Schema[int]{
 			Dest:    &c.ServerPort,
 			Default: cfg.Addr(8080),

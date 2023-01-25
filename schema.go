@@ -6,6 +6,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Schemas is a named type for a map of Schemas.
+type Schemas map[string]interface {
+	Load(context.Context) error
+	schema()
+}
+
 // A Schema models a configuration setting for an application.
 type Schema[T any] struct {
 	// Dest is a required field which points where to store the configuration value when Load is called.
@@ -17,6 +23,8 @@ type Schema[T any] struct {
 	// Validator is an optional field which ensures the value provided by Provider is valid.
 	Validator Validator[T]
 }
+
+func (Schema[T]) schema() {}
 
 // Load calls s.Provider.Provide to get the configuration value and store it into s.Dest.
 // If s.Provider.Provide returns a NoValueProvidedError and s.Default is not nil, s.Default will be used instead.
