@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/internal"
 	"github.com/zpatrick/cfg/providers/yaml"
 )
 
 type Config struct {
-	Timeout    cfg.Setting[time.Duration]
-	ServerPort cfg.Setting[int]
-	ServerAddr cfg.Setting[string]
+	Timeout    time.Duration
+	ServerPort int
+	ServerAddr string
 }
 
 func Example() {
@@ -24,7 +25,7 @@ server:
   addr: localhost
 `
 
-	path, err := cfg.WriteTempFile("", data)
+	path, err := internal.WriteTempFile("", data)
 	if err != nil {
 		panic(err)
 	}
@@ -35,26 +36,28 @@ server:
 		panic(err)
 	}
 
-	c := &Config{
-		Timeout: cfg.Setting[time.Duration]{
+	var c Config
+	if err := cfg.Load(context.Background(), cfg.Schemas{
+		"timeout": cfg.Schema[time.Duration]{
+			Dest:     &c.Timeout,
 			Provider: yamlFile.Duration("timeout"),
 		},
-		ServerPort: cfg.Setting[int]{
+		"server.port": cfg.Schema[int]{
+			Dest:     &c.ServerPort,
 			Provider: yamlFile.Int("server", "port"),
 		},
-		ServerAddr: cfg.Setting[string]{
+		"server.addr": cfg.Schema[string]{
+			Dest:     &c.ServerAddr,
 			Provider: yamlFile.String("server", "addr"),
 		},
-	}
-
-	if err := cfg.Load(context.Background(), c); err != nil {
+	}); err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("Timeout: %s ServerPort: %d ServerAddr: %s",
-		c.Timeout.Val(),
-		c.ServerPort.Val(),
-		c.ServerAddr.Val(),
+		c.Timeout,
+		c.ServerPort,
+		c.ServerAddr,
 	)
 
 	// Output: Timeout: 5s ServerPort: 8080 ServerAddr: localhost

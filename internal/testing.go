@@ -1,4 +1,4 @@
-package cfgtest
+package internal
 
 import (
 	"bytes"

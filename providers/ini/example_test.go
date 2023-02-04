@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/internal/cfgtest"
+	"github.com/zpatrick/cfg/internal"
 	"github.com/zpatrick/cfg/providers/ini"
 )
 
@@ -26,7 +26,7 @@ port = 8080
 addr = "localhost"
 `
 
-	path, err := cfgtest.WriteTempFile("", data)
+	path, err := internal.WriteTempFile("", data)
 	if err != nil {
 		panic(err)
 	}
