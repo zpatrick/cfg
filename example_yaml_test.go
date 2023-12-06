@@ -1,54 +1,54 @@
-package yaml_test
+package cfg_test
 
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/internal"
-	"github.com/zpatrick/cfg/providers/yaml"
+	"gopkg.in/yaml.v3"
 )
 
-type Config struct {
+type MyConfig struct {
 	Timeout    time.Duration
 	ServerPort int
 	ServerAddr string
 }
 
-func Example() {
+type yamlFile struct {
+	Timeout *time.Duration `yaml:"timeout"`
+	Server  struct {
+		Port *int    `yaml:"port"`
+		Addr *string `yaml:"addr"`
+	} `yaml:"server"`
+}
+
+func Example_YAML() {
 	const data = `
 timeout: 5s
 server:
   port: 8080
-  addr: localhost
 `
 
-	path, err := internal.WriteTempFile("", data)
-	if err != nil {
-		panic(err)
-	}
-	defer os.Remove(path)
-
-	yamlFile, err := yaml.New(path)
-	if err != nil {
+	var f yamlFile
+	if err := yaml.Unmarshal([]byte(data), &f); err != nil {
 		panic(err)
 	}
 
-	var c Config
+	var c MyConfig
 	if err := cfg.Load(context.Background(), cfg.Schemas{
 		"timeout": cfg.Schema[time.Duration]{
 			Dest:     &c.Timeout,
-			Provider: yamlFile.Duration("timeout"),
+			Provider: cfg.StaticProviderAddr(f.Timeout, false),
 		},
 		"server.port": cfg.Schema[int]{
 			Dest:     &c.ServerPort,
-			Provider: yamlFile.Int("server", "port"),
+			Provider: cfg.StaticProviderAddr(f.Server.Port, false),
 		},
 		"server.addr": cfg.Schema[string]{
 			Dest:     &c.ServerAddr,
-			Provider: yamlFile.String("server", "addr"),
+			Default:  cfg.Addr("localhost"),
+			Provider: cfg.StaticProviderAddr(f.Server.Addr, false),
 		},
 	}); err != nil {
 		panic(err)

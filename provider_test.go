@@ -97,7 +97,7 @@ func TestMultiProvider_returnsNoValueProvidedErrorWhenDoneIterating(t *testing.T
 }
 
 func TestStaticProvider(t *testing.T) {
-	p := cfg.StaticProvider(5)
+	p := cfg.StaticProvider(5, false)
 	out, err := p.Provide(context.Background())
 	assert.NilError(t, err)
 	assert.Equal(t, out, 5)

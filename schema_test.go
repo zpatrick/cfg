@@ -15,7 +15,7 @@ func ExampleSchema_validation() {
 	schema := cfg.Schema[string]{
 		Dest:      &userName,
 		Validator: cfg.OneOf("admin", "guest"),
-		Provider:  cfg.StaticProvider("other"),
+		Provider:  cfg.StaticProvider("other", false),
 	}
 
 	if err := schema.Load(context.Background()); err != nil {
@@ -29,7 +29,7 @@ func TestSchemaLoad_populatesDest(t *testing.T) {
 	var out int
 	port := cfg.Schema[int]{
 		Dest:     &out,
-		Provider: cfg.StaticProvider(8080),
+		Provider: cfg.StaticProvider(8080, false),
 	}
 
 	assert.NilError(t, port.Load(context.Background()))
@@ -71,7 +71,7 @@ func TestSchemaLoad_returnsValidationError(t *testing.T) {
 
 	port := cfg.Schema[int]{
 		Dest:     &out,
-		Provider: cfg.StaticProvider(8080),
+		Provider: cfg.StaticProvider(8080, false),
 		Validator: cfg.ValidatorFunc[int](func(i int) error {
 			called = true
 			return io.EOF
@@ -90,7 +90,7 @@ func TestSchemaLoad_validationSuccess(t *testing.T) {
 
 	port := cfg.Schema[int]{
 		Dest:     &out,
-		Provider: cfg.StaticProvider(8080),
+		Provider: cfg.StaticProvider(8080, false),
 		Validator: cfg.ValidatorFunc[int](func(i int) error {
 			called = true
 			return nil

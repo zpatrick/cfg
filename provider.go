@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/pkg/errors"
 )
@@ -45,10 +46,35 @@ func (m MultiProvider[T]) Provide(ctx context.Context) (T, error) {
 }
 
 // StaticProvider adapts v into a Provider[T].
+// If allowZero is false, the Provider will return a NoValueProvidedError if v is the zero value.
 //
 //	var p Provider[int] = StaticProvider(5)
-func StaticProvider[T any](v T) Provider[T] {
+func StaticProvider[T any](v T, allowZero bool) Provider[T] {
 	return ProviderFunc[T](func(ctx context.Context) (T, error) {
+		if !allowZero && reflect.ValueOf(v).IsZero() {
+			return v, NoValueProvidedError
+		}
+
 		return v, nil
+	})
+}
+
+// StaticProviderAddr adapts pv into a Provider[T].
+// If pv is nil, the Provider will return a NoValueProvidedError.
+// If allowZero is false, the Provider will return a NoValueProvidedError if v is the zero value.
+//
+//	var p Provider[int] = StaticProviderAddr(&addr)
+func StaticProviderAddr[T any](pv *T, allowZero bool) Provider[T] {
+	return ProviderFunc[T](func(ctx context.Context) (T, error) {
+		var zero T
+		if pv == nil {
+			return zero, NoValueProvidedError
+		}
+
+		if !allowZero && reflect.ValueOf(*pv).IsZero() {
+			return zero, NoValueProvidedError
+		}
+
+		return *pv, nil
 	})
 }
