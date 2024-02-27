@@ -53,6 +53,7 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 		"server port": cfg.Schema[int]{
 			Dest:    &c.ServerPort,
 			Default: cfg.Addr(8080),
+			Validator: cfg.Between(8000, 9000),
 			Provider: cfg.MultiProvider {
 				envvar.Newf("APP_SERVER_PORT", strconv.Atoi),
 				iniFile.Int("server", "port"),
