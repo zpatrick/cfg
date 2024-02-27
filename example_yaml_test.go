@@ -23,7 +23,7 @@ type yamlFile struct {
 	} `yaml:"server"`
 }
 
-func Example_YAML() {
+func ExampleYAML() {
 	const data = `
 timeout: 5s
 server:
