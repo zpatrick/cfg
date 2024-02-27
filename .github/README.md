@@ -84,7 +84,7 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 - [INI Files](https://pkg.go.dev/github.com/zpatrick/cfg#INIFile)
 - [TOML Files](https://pkg.go.dev/github.com/zpatrick/cfg#TOMLFile)
 
-Please see the [Godoc](https://pkg.go.dev/github.com/zpatrick/cfg#example-YAML) example for YAML files.  
+For **YAML** files, please see the [local](https://github.com/zpatrick/cfg/blob/main/example_yaml_test.go) or [Godoc](https://pkg.go.dev/github.com/zpatrick/cfg#example-YAML) example.  
 
 # Validation
 A setting may specify a [Validator](https://pkg.go.dev/github.com/zpatrick/cfg#Validator) which will check whether or not a provided value is valid.
