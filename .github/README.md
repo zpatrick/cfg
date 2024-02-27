@@ -3,11 +3,11 @@
 [![Go Doc](https://godoc.org/github.com/zpatrick/cfg?status.svg)](https://godoc.org/github.com/zpatrick/cfg)
 [![Build Status](https://github.com/zpatrick/cfg/actions/workflows/go.yaml/badge.svg?branch=main)](https://github.com/zpatrick/cfg/actions/workflows/go.yaml?query=branch%3Amain)
 
-This package is designed to house a common set of configuration-related features & patterns for teams working with microservice applications. These designs include:
+This package is designed to house a common set of configuration-related features & patterns for Golang services. This include:
 
 - Support for multiple sources of configuration.
 - Providing default values and validation logic for specific settings.
-- Support access patterns which encourage decoupling configuration logic from the rest of the application. 
+- Package API which encourages high cohesion and low coupling with the rest of the application.
 
 ## Usage
 
@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/providers/envvar"
-	"github.com/zpatrick/cfg/providers/yaml"
+	"github.com/zpatrick/cfg/envvar"
+	"github.com/zpatrick/cfg/ini"
 )
 
 type Config struct {
@@ -32,7 +32,7 @@ type Config struct {
 }
 
 func LoadConfig(ctx context.Context, path string) (*Config, error) {
-	yamlFile, err := yaml.New(path)
+	iniFile, err := ini.Load(path)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 			Default: cfg.Addr(8080),
 			Provider: cfg.MultiProvider {
 				envvar.Newf("APP_SERVER_PORT", strconv.Atoi),
-				yamlFile.Int("server", "port"),
+				iniFile.Int("server", "port"),
 			},
 		},
 		"server timeout": cfg.Schema[time.Duration]{
@@ -64,7 +64,7 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 			Validator: cfg.Between(time.Second, time.Minute*5),
 			Provider:  cfg.MultiProvider {
 				envvar.Newf("APP_SERVER_TIMEOUT", time.ParseDuration),
-				yamlFile.Duration("server", "timeout"),
+				iniFile.Duration("server", "timeout"),
 			},
 		},
 	}); err != nil {
@@ -82,8 +82,8 @@ func LoadConfig(ctx context.Context, path string) (*Config, error) {
 - [Flags](https://pkg.go.dev/github.com/zpatrick/cfg#Flag)
 - [INI Files](https://pkg.go.dev/github.com/zpatrick/cfg#INIFile)
 - [TOML Files](https://pkg.go.dev/github.com/zpatrick/cfg#TOMLFile)
-- [YAML Files](https://pkg.go.dev/github.com/zpatrick/cfg#YAMLFile)
 
+Please see the [Godoc](https://pkg.go.dev/github.com/zpatrick/cfg#example-YAML) example for YAML files.  
 
 # Validation
 A setting may specify a [Validator](https://pkg.go.dev/github.com/zpatrick/cfg#Validator) which will check whether or not a provided value is valid.
@@ -96,6 +96,20 @@ The built in validators are:
 - [Not](https://pkg.go.dev/github.com/zpatrick/cfg#Not) - Ensures a given validator does not pass.
 
 # Advanced
+
+## Custom Validation
+A custom Validator must satisfy the [Validator](https://pkg.go.dev/github.com/zpatrick/cfg#Validator) interface.
+The simplest way to achieve this is by using the [ValidatorFunc](https://pkg.go.dev/github.com/zpatrick/cfg#ValidatorFunc) type.
+
+```go
+cfg.Setting[string]{
+	Default: cfg.Addr("name@email.com"),
+	Validator: cfg.ValidatorFunc(func(addr string) error {
+		_, err := mail.ParseAddr(addr)
+		return err
+	}),
+}
+```
 
 ## Custom Providers
 
@@ -132,19 +146,5 @@ func LoadConfig() (*Config, error) {
 	}
 
 	...
-}
-```
-
-## Custom Validation
-A custom Validator must satisfy the [Validator](https://pkg.go.dev/github.com/zpatrick/cfg#Validator) interface.
-The simplest way to achieve this is by using the [ValidatorFunc](https://pkg.go.dev/github.com/zpatrick/cfg#ValidatorFunc) type.
-
-```go
-cfg.Setting[string]{
-	Default: cfg.Addr("name@email.com"),
-	Validator: cfg.ValidatorFunc(func(addr string) error {
-		_, err := mail.ParseAddr(addr)
-		return err
-	}),
 }
 ```

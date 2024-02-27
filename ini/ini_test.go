@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/ini"
 	"github.com/zpatrick/cfg/internal"
-	"github.com/zpatrick/cfg/providers/ini"
 	"github.com/zpatrick/testx/assert"
 )
 
@@ -27,7 +27,7 @@ timeout = "5s"
 	assert.NilError(t, err)
 	t.Cleanup(func() { os.Remove(path) })
 
-	f, err := ini.New(path)
+	f, err := ini.Load(path)
 	assert.NilError(t, err)
 
 	internal.AssertProvides(t, f.String("", "root"), "hello")
