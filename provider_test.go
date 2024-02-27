@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/providers/envvar"
+	"github.com/zpatrick/cfg/envvar"
 	"github.com/zpatrick/testx/assert"
 )
 

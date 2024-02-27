@@ -7,7 +7,7 @@ import (
 
 	"github.com/pelletier/go-toml"
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/providers/generic"
+	"github.com/zpatrick/cfg/internal"
 )
 
 type Provider struct {
@@ -68,7 +68,7 @@ func Provide[T any](p *Provider, keys ...string) cfg.Provider[T] {
 		val := p.tree.GetPath(keys)
 		v, ok := val.(T)
 		if !ok {
-			return out, generic.NewUnexpectedTypeError(out, val)
+			return out, internal.NewUnexpectedTypeError(out, val)
 		}
 
 		return v, nil

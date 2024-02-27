@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/zpatrick/cfg"
+	"github.com/zpatrick/cfg/ini"
 	"github.com/zpatrick/cfg/internal"
-	"github.com/zpatrick/cfg/providers/ini"
 )
 
 type Config struct {
@@ -32,7 +32,7 @@ addr = "localhost"
 	}
 	defer os.Remove(path)
 
-	iniFile, err := ini.New(path)
+	iniFile, err := ini.Load(path)
 	if err != nil {
 		panic(err)
 	}

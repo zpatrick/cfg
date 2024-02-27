@@ -8,7 +8,7 @@ import (
 
 	"github.com/zpatrick/cfg"
 	"github.com/zpatrick/cfg/internal"
-	"github.com/zpatrick/cfg/providers/toml"
+	"github.com/zpatrick/cfg/toml"
 )
 
 type Config struct {

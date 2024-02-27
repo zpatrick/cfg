@@ -3,7 +3,7 @@ package internal
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/zpatrick/cfg"
@@ -13,7 +13,7 @@ import (
 // WriteTempFile creates a new temporary file under dir with the contents of data.
 // The file name is returned.
 func WriteTempFile(dir, data string) (string, error) {
-	file, err := ioutil.TempFile(dir, "config.yaml")
+	file, err := os.CreateTemp(dir, "config.yaml")
 	if err != nil {
 		return "", nil
 	}

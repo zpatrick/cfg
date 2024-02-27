@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/zpatrick/cfg"
-	"github.com/zpatrick/cfg/providers/flags"
+	"github.com/zpatrick/cfg/flags"
 	"github.com/zpatrick/testx/assert"
 )
 

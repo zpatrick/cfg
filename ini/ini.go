@@ -16,8 +16,8 @@ type Provider struct {
 	f *ini.File
 }
 
-// New returns a Provider which loads values from the parsed ini file at the given path.
-func New(path string) (*Provider, error) {
+// Load reads and parses the ini file at the given path.
+func Load(path string) (*Provider, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -28,6 +28,11 @@ func New(path string) (*Provider, error) {
 		return nil, err
 	}
 
+	return &Provider{f: f}, nil
+}
+
+// New returns a Provider which loads values from f.
+func New(f *ini.File) (*Provider, error) {
 	return &Provider{f: f}, nil
 }
 
